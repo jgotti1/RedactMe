@@ -9,8 +9,9 @@ PLANNING.md is a local, Git-ignored file containing secrets. Never print, copy, 
 ## Stack and current scope
 - HTML/CSS/vanilla JavaScript with Vite for development and bundling. No frontend framework without user approval.
 - Python/FastAPI backend; Firebase Authentication owns all login credentials.
-- Current authorized implementation: Google and email/password signup/login, password reset, email verification controls, and an authenticated backend greeting.
+- Current authorized implementation: Google and email/password signup/login, password reset, email verification controls, an authenticated backend greeting, and a signed-in document workspace preview.
 - AGENTS.md is the shared source of truth for Codex and Claude instructions, architectural decisions, progress and remaining work. Update this file so both tools use the same context. Read README.md for setup commands. PLANNING.md is a local ignored specification containing secrets; never print or commit its secret section.
+- Keep AGENTS.md current automatically as coding progresses; do not wait for the user to ask. Before completing each coding task, record relevant scope and behavior changes, decisions, validation results and remaining work, and reconcile outdated status statements. Never include secrets or sensitive user data.
 - OpenAI calls must run only on the backend. Never place backend secrets in VITE_* variables.
 - Future document stack: PyMuPDF, PDF.js, Microsoft Presidio, deterministic detection, modular OCR, OpenAI Structured Outputs.
 
@@ -47,10 +48,10 @@ PLANNING.md is a local, Git-ignored file containing secrets. Never print, copy, 
 
 ## Implemented
 - Separate frontend/ and backend/ folders.
-- Vanilla JavaScript frontend with Firebase Google popup login, email/password signup and login, password reset, email verification controls, logout and API retry.
+- Vanilla JavaScript frontend with Firebase Google popup login, email/password signup and login, password reset, email verification controls, logout and automatic navigation to the workspace.
 - FastAPI health endpoint and protected GET /api/hello returning Hello from the backend.
 - Backend token verification with Firebase Admin SDK, including revocation and disabled-account checks.
-- Environment templates, Git exclusions, backend authentication tests and development scripts.
+- Git exclusions, backend authentication tests and development scripts.
 
 ## Setup confirmed by user
 - OpenAI project created and funded.
@@ -99,3 +100,14 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Firebase manages passwords; no application password storage, custom password backend or logging added. Unverified email users can test the foundation greeting; document access policy must be enforced on the backend when document processing is implemented.
 - Signup sends a Firebase verification email. Administrative signup notifications remain a future account/support task.
 - Frontend build and all 10 backend tests passed. Browser checked form modes, password-mismatch blocking, mobile overflow and errors. Real email signup/login/reset and delivery have not been exercised against the live project.
+
+## Workspace preview — September 21, 2026
+- User authorized removal of login connection-testing UI and creation of the main document page only.
+- Firebase sign-in/session restoration opens `/app`; sign-out and unauthenticated visits to `/app` return to `/`. Routing uses the existing vanilla JavaScript app and History API, with Vite's development fallback. Production static routing still needs implementation.
+- Added responsive upload, review, and verified-download areas plus an explicitly fictional sample with selectable highlights. Real PDF upload, manual redaction, approval and download remain disabled; no document processing or storage added.
+- Email signup, password reset and workspace verification controls remain. The protected backend greeting remains, but login no longer calls it.
+- Frontend build and all 10 backend tests passed. Browser verified restored Firebase session navigation, sample selections, responsive layout, and sign-out. Real new signup and verification-email delivery were not exercised.
+
+## Google sign-in branding — September 21, 2026
+- Replaced the plain blue G with the standard multicolor Google G as an inline SVG and changed the button label to “Sign in with Google.” Firebase sign-in behavior is unchanged.
+- Frontend production build passed.

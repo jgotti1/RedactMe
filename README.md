@@ -1,6 +1,6 @@
 # Redact Me
 
-Foundation preview: Google or email/password sign-in followed by an authenticated Python API request displaying **Hello from the backend**.
+Google or email/password sign-in opens the document workspace at `/app`. The workspace includes upload, review and download areas plus an interactive fictional sample. Real PDF processing is not implemented yet.
 
 ## Structure
 
@@ -61,7 +61,9 @@ In another terminal:
 npm run dev
 ```
 
-Open **http://localhost:5173**, select **Continue with Google**, and sign in. The browser sends a Firebase ID token in the Authorization header to **http://127.0.0.1:8000/api/hello**. The API verifies it before returning the greeting. Sign out clears the displayed account and greeting. If credentials are missing, login can succeed but the protected API will show a setup error rather than bypass authentication.
+Open **http://localhost:5173** and sign in with Google or email. Firebase authentication opens the workspace at `/app`; sign-out returns to `/`. The workspace preserves email verification controls and includes a sample review with selectable fictional findings. Upload, manual redaction, approval and download controls are disabled until secure document processing is implemented.
+
+The login page no longer calls the backend greeting or displays connection-testing controls. The protected `/api/hello` endpoint remains available for backend authentication checks. Client-side workspace routing is a UI convenience; all future document endpoints must independently verify Firebase tokens. Vite serves `/app` during development. Production SPA fallback routing remains part of the planned FastAPI static-serving work.
 
 `GET /api/health` is public. `GET /api/hello` requires authentication. CORS permits only `http://localhost:5173` by default; configure `FRONTEND_ORIGINS` as a comma-separated list for other frontend origins. Use HTTPS in production. Frontend builds do not include the root backend `.env`.
 
@@ -82,6 +84,6 @@ References: [Firebase Google login](https://firebase.google.com/docs/auth/web/go
 
 ## Email accounts
 
-Use the email form to sign in, or select Create an account to register with a confirmed password. New email accounts receive a Firebase verification email; the signed-in panel supports sending another email and refreshing verification status. Forgot password opens the reset form. Passwords are handled by Firebase and are never sent to our API or stored by the application. The greeting currently permits authenticated unverified email accounts; future document endpoints must define and enforce their verification policy on the backend.
+Use the email form to sign in, or select Create an account to register with a confirmed password. New email accounts receive a Firebase verification email; the signed-in panel supports sending another email and refreshing verification status. Forgot password opens the reset form. Passwords are handled by Firebase and are never sent to our API or stored by the application. The workspace preview and backend greeting currently permit authenticated unverified email accounts; future document endpoints must define and enforce their verification policy on the backend.
 
 Real Firebase signup/login and email delivery require testing with your own account. Reference: [Firebase email/password authentication](https://firebase.google.com/docs/auth/web/password-auth) and [verification and password reset](https://firebase.google.com/docs/auth/web/manage-users).

@@ -1,14 +1,10 @@
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { createEmailAccount, loginWithEmail, emailVerification, resetPassword, authErrorMessage } from "./email-auth.js";
-import { getGreeting } from "./api.js";
+import { showWorkspace } from "./workspace.js";
 
 const loginButton = document.querySelector("#google-login");
 const logoutButton = document.querySelector("#logout");
-const retryButton = document.querySelector("#retry");
 const status = document.querySelector("#status");
-const greeting = document.querySelector("#greeting");
-const responsePanel = document.querySelector("#backend-response");
-const connectionLabel = document.querySelector("#connection-label");
 const emailForm = document.querySelector("#email-form");
 const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
@@ -21,45 +17,11 @@ const verificationStatus = document.querySelector("#verification-status");
 let mode = "login";
 let auth;
 let provider;
-let pendingRequest;
 
 function setStatus(message, error = false) {
-  status.textContent = message;
-  status.classList.toggle("error", error);
-}
-
-async function callBackend(user) {
-  pendingRequest?.abort();
-  const controller = new AbortController();
-  pendingRequest = controller;
-  retryButton.disabled = true;
-  greeting.textContent = "Connecting…";
-  responsePanel.dataset.state = "loading";
-  responsePanel.setAttribute("aria-busy", "true");
-  connectionLabel.textContent = "Connecting";
-  setStatus("Verifying your session with the backend…");
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  try {
-    const message = await getGreeting(user, controller.signal);
-    if (auth.currentUser?.uid !== user.uid || controller.signal.aborted) return;
-    greeting.textContent = message;
-    responsePanel.dataset.state = "success";
-    connectionLabel.textContent = "Connected";
-    setStatus("Signed in. Your authenticated API request succeeded.");
-  } catch (error) {
-    if (pendingRequest !== controller || auth.currentUser?.uid !== user.uid) return;
-    greeting.textContent = "Let’s reconnect";
-    responsePanel.dataset.state = "error";
-    connectionLabel.textContent = "Needs attention";
-    setStatus(error.name === "AbortError" ? "The backend request timed out. Try again." :
-      error instanceof TypeError ? "Cannot reach the backend. Start the API on port 8000." : error.message, true);
-  } finally {
-    clearTimeout(timeout);
-    if (pendingRequest === controller) {
-      retryButton.disabled = false;
-      responsePanel.setAttribute("aria-busy", "false");
-    }
-  }
+  const target = auth?.currentUser ? document.querySelector("#workspace-status") : status;
+  target.textContent = message;
+  target.classList.toggle("error", error);
 }
 
 loginButton.disabled = true;
@@ -69,19 +31,19 @@ try {
   auth = firebase.auth;
   provider = firebase.googleProvider;
   onAuthStateChanged(auth, (user) => {
-    pendingRequest?.abort();
-    document.querySelector("#signed-out").hidden = Boolean(user);
-    document.querySelector("#signed-in").hidden = !user;
-    document.querySelector("#welcome").textContent = user ? "You’re signed in" : "Welcome to Redact Me";
-    document.querySelector("#card-subtitle").textContent = user ? "Let’s check your workspace connection." : "Sign in to get started with your workspace.";
+    document.querySelector("#login-page").hidden = Boolean(user);
+    document.querySelector("#workspace").hidden = !user;
+    document.querySelector("#header-account").hidden = !user;
+    document.querySelector("#header-badge").hidden = Boolean(user);
+    history.replaceState(null, "", user ? "/app" : "/");
+    document.title = user ? "Workspace | Redact Me" : "Sign in | Redact Me";
     verificationPanel.hidden = !user || user.emailVerified || !user.providerData.some((provider) => provider.providerId === "password");
     if (user) {
-      document.querySelector("#avatar").textContent = (user.displayName || user.email || "R").charAt(0).toUpperCase();
-      document.querySelector("#account").textContent = `Signed in as ${user.displayName || user.email || "User"}`;
-      callBackend(user);
+      showWorkspace(user);
+      document.querySelector("#account").textContent = user.displayName || user.email || "Your account";
+      document.querySelector("#workspace-title").focus();
     } else {
       document.querySelector("#account").textContent = "";
-      greeting.textContent = "";
       setStatus("Sign in with Google or your email address.");
       setAuthBusy(false);
     }
@@ -117,9 +79,6 @@ logoutButton.addEventListener("click", async () => {
   try { await signOut(auth); }
   catch { setStatus("Sign-out failed. Please try again.", true); }
   finally { logoutButton.disabled = false; }
-});
-retryButton.addEventListener("click", () => {
-  if (auth.currentUser) callBackend(auth.currentUser);
 });
 
 
@@ -235,3 +194,7 @@ document.querySelector("#check-verification").addEventListener("click", async (e
   } finally { button.disabled = false; }
 });
 setAuthBusy(true);
+
+window.addEventListener("popstate", () => {
+  if (auth) history.replaceState(null, "", auth.currentUser ? "/app" : "/");
+});
