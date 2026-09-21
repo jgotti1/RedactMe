@@ -1,14 +1,27 @@
 # Redact Me
 
-Foundation preview: Google sign-in followed by an authenticated Python API request displaying **Hello from the backend**.
+Foundation preview: Google or email/password sign-in followed by an authenticated Python API request displaying **Hello from the backend**.
 
 ## Structure
 
 - `frontend/`: HTML, CSS and vanilla JavaScript, Firebase web SDK, Vite.
 - `backend/`: Python/FastAPI and Firebase Admin SDK.
-- `AGENTS.md`: permanent project instructions.
-- `CLAUDE.md`: progress and remaining setup.
+- `AGENTS.md`: shared instructions, architecture, progress and remaining work for Codex and Claude.
+- `CLAUDE.md`: directs Claude to read and follow `AGENTS.md`.
 - `PLANNING.md`: local specification, ignored by Git because it contains secrets.
+
+## Deployment architecture — approved September 18, 2026
+
+- Deploy the complete application to Railway as a single Python/FastAPI service under one HTTPS domain.
+- Keep separate `frontend/` and `backend/` source folders.
+- Build the HTML/CSS/vanilla JavaScript frontend with Vite; FastAPI serves the resulting static assets and HTML pages alongside `/api/*` endpoints.
+- Backend-served frontend means serving the built files; it does not require a frontend framework or dynamic server-side HTML templates.
+- Production frontend requests use relative same-origin API paths, such as `/api/hello`. Separate frontend/API CORS is unnecessary in production; local development may continue using separate servers.
+- Build frontend assets during deployment; run the Python service on Railway’s assigned port. Keep API routing distinct from static-file routing.
+- Firebase remains the authentication provider. Authorize the Railway hostname and any custom app domain in Firebase before production login.
+- Backend secrets are runtime configuration and must never enter frontend bundles or container images.
+- Process documents in memory or isolated temporary storage with explicit expiration and cleanup across upload, review, redaction and download. Do not rely on deploy/restart filesystem deletion as cleanup; do not attach persistent storage for PDFs.
+- This is the chosen deployment architecture. Production static serving, relative API configuration and Railway deployment configuration still need implementation; no deployment has occurred.
 
 ## Install
 
@@ -66,3 +79,9 @@ Backend tests use synthetic tokens and mocked Firebase verification. A real Goog
 No PDF processing or OpenAI requests are implemented. The root OpenAI key is reserved for a future backend phase and must be replaced before use because it was shared in chat. No passwords or documents are stored by this foundation.
 
 References: [Firebase Google login](https://firebase.google.com/docs/auth/web/google-signin), [Firebase ID token verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens), [FastAPI CORS](https://fastapi.tiangolo.com/tutorial/cors/), [Vite environment variables](https://vite.dev/guide/env-and-mode).
+
+## Email accounts
+
+Use the email form to sign in, or select Create an account to register with a confirmed password. New email accounts receive a Firebase verification email; the signed-in panel supports sending another email and refreshing verification status. Forgot password opens the reset form. Passwords are handled by Firebase and are never sent to our API or stored by the application. The greeting currently permits authenticated unverified email accounts; future document endpoints must define and enforce their verification policy on the backend.
+
+Real Firebase signup/login and email delivery require testing with your own account. Reference: [Firebase email/password authentication](https://firebase.google.com/docs/auth/web/password-auth) and [verification and password reset](https://firebase.google.com/docs/auth/web/manage-users).
