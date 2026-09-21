@@ -271,3 +271,8 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 @media (max-width: 1100px) { .workspace-grid { grid-template-columns: 270px minmax(0, 1fr) 290px; } }
 @media (max-width: 900px) { .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; } }
 @media (max-width: 700px) { .workspace-grid { grid-template-columns: 1fr; } }
+
+/* While reviewing, the options panel steps aside and the preview takes its column. */
+.workspace-grid.reviewing .options-panel { display: none; }
+.workspace-grid.reviewing .document-area { grid-column: span 2; }
+@media (max-width: 900px) { .workspace-grid.reviewing .document-area { grid-column: auto; } }

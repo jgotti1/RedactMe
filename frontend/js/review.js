@@ -312,6 +312,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     summary();
   });
   view.hidden = false;
+  root.querySelector('.workspace-grid').classList.add('reviewing');
   root.querySelector('#discard-restart').hidden = false;
   root.querySelector('#upload-empty').hidden = true;
   renderList();
@@ -330,6 +331,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     image.removeAttribute('src');
     overlay.replaceChildren();
     view.hidden = true;
+    root.querySelector('.workspace-grid').classList.remove('reviewing');
     root.querySelector('#discard-restart').hidden = true;
     root.querySelector('#upload-empty').hidden = false;
     root.querySelector('#draw-hint').hidden = true;
