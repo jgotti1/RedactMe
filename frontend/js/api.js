@@ -30,3 +30,15 @@ export const uploadPdf = (id, file, token, signal) => documentRequest(id, token,
 export const discardPdf = (id, token, keepalive = false) => documentRequest(id, token, { method: 'DELETE', keepalive, signal: AbortSignal.timeout(10000) });
 export const scanPdf = (id, token, useAi = true, signal) => documentRequest(id, token, { method: 'POST', signal }, `/scan?use_ai=${useAi}`);
 export const getPdfStatus = (id, token) => documentRequest(id, token, { signal: AbortSignal.timeout(10000) });
+
+async function binaryRequest(path, token, options = {}) {
+  const response = await fetch(`${apiBase}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, ...(options.json ? { 'Content-Type': 'application/json' } : {}) }, body: options.json ? JSON.stringify(options.json) : undefined, cache: 'no-store' });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(typeof payload.detail === 'string' ? payload.detail : 'The request failed. Please try again.');
+  }
+  return response;
+}
+export const previewPage = async (id, page, token, signal) => (await binaryRequest(`/api/documents/${encodeURIComponent(id)}/pages/${page}/preview`, token, { signal })).blob();
+export const redactPdf = async (id, body, token) => (await binaryRequest(`/api/documents/${encodeURIComponent(id)}/redact`, token, { method: 'POST', json: body, signal: AbortSignal.timeout(320000) })).json();
+export const downloadPdf = async (id, token) => (await binaryRequest(`/api/documents/${encodeURIComponent(id)}/download`, token, { signal: AbortSignal.timeout(60000) })).blob();

@@ -189,3 +189,48 @@ def test_cors_upload_delete(client):
             'Origin': 'http://localhost:5173', 'Access-Control-Request-Method': method,
             'Access-Control-Request-Headers': 'authorization,content-type'})
         assert result.status_code == 200
+
+@pytest.mark.parametrize('body, message', [
+    (b'', 'empty (0 bytes)'),
+    (b'\x89PNG\r\n\x1a\nsynthetic', 'appears to be an image'),
+    (b'\xff\xd8\xffsynthetic', 'appears to be an image'),
+    (b'This is a text file', 'does not contain a PDF header'),
+    (b'%PDF-1.7\ntruncated', 'corrupted or incomplete'),
+])
+def test_specific_invalid_file_messages_and_cleanup(client, body, message):
+    _, response = upload(client, body)
+    assert response.status_code == 422
+    assert message in response.json()['detail']
+    assert not store.documents and not store.active
+
+
+def test_blank_pdf_has_clear_error(client):
+    with pymupdf.open() as document:
+        document.new_page()
+        document.new_page()
+        body = document.tobytes()
+    _, response = upload(client, body)
+    assert response.status_code == 422
+    assert 'all pages appear empty' in response.json()['detail']
+    assert not store.documents
+
+
+def test_blank_page_with_populated_page_is_valid(client):
+    with pymupdf.open() as document:
+        document.new_page()
+        document.new_page().insert_text((72, 72), 'Synthetic content')
+        body = document.tobytes()
+    _, response = upload(client, body)
+    assert response.status_code == 201 and response.json()['page_count'] == 2
+
+
+def test_image_inside_pdf_is_supported(client):
+    with pymupdf.open() as source:
+        source.new_page().insert_text((72, 72), 'Scanned document example')
+        image = source[0].get_pixmap()
+    with pymupdf.open() as document:
+        page = document.new_page()
+        page.insert_image(page.rect, pixmap=image)
+        body = document.tobytes()
+    _, response = upload(client, body)
+    assert response.status_code == 201

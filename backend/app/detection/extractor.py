@@ -10,17 +10,23 @@ def extract(data: bytes) -> dict:
     pymupdf.TOOLS.mupdf_display_warnings(False)
     pages = []
     with pymupdf.open(stream=data, filetype="pdf") as document:
+        keys = ("title", "author", "subject", "keywords", "creator", "producer", "creationDate", "modDate")
+        info = {"metadata": any(str((document.metadata or {}).get(k) or "").strip() for k in keys),
+                "embedded_files": document.embfile_count()}
+        annots = 0
         for number, page in enumerate(document, start=1):
+            annots += len(list(page.annots() or []))
             words = [[round(w[0], 2), round(w[1], 2), round(w[2], 2), round(w[3], 2), w[4], w[5], w[6]]
                      for w in page.get_text("words")]
             page_area = max(page.rect.width * page.rect.height, 1)
             image_area = 0.0
-            for info in page.get_image_info():
-                rect = pymupdf.Rect(info["bbox"]) & page.rect
+            for image_info in page.get_image_info():
+                rect = pymupdf.Rect(image_info["bbox"]) & page.rect
                 image_area += 0 if rect.is_empty else rect.width * rect.height
             pages.append({"page": number, "width": page.rect.width, "height": page.rect.height,
                           "words": words, "image_fraction": min(image_area / page_area, 1.0)})
-    return {"pages": pages}
+    info["annots"] = annots
+    return {"pages": pages, "info": info}
 
 
 if __name__ == "__main__":

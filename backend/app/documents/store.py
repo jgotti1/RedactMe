@@ -22,11 +22,14 @@ class Document:
     validated: bool = False
     scan: dict | None = None
     scanning: bool = False
+    output: bytes | None = None
+    redacting: bool = False
 
     def discard(self):
         # Release our buffer; Python/OS copies are not guaranteed secure erasure.
         self.data.clear()
         self.scan = None
+        self.output = None
 
     def summary(self):
         return {"document_id": self.document_id, "status": "VALIDATED",

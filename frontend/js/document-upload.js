@@ -1,4 +1,5 @@
 import { uploadPdf, discardPdf, scanPdf } from './api.js';
+import { createReview } from './review.js';
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
@@ -65,8 +66,14 @@ export function setupDocumentUpload(root, user) {
     if (disposed || current !== revision) return;
     reset();
     alert.hidden = true;
-    if (!user.emailVerified || !/\.pdf$/i.test(file.name) || file.size === 0 || file.size > MAX_BYTES) {
-      notify(!user.emailVerified ? 'Verify your email address before uploading.' : 'Choose a nonempty .pdf file no larger than 20 MB. Nothing was uploaded.', true);
+    let fileError = '';
+    if (!user.emailVerified) fileError = 'Verify your email address before uploading.';
+    else if (file.size === 0) fileError = 'This file is empty (0 bytes) and contains no PDF data. Export or download it again.';
+    else if (file.size > MAX_BYTES) fileError = 'This file exceeds the 20 MB limit. Choose a smaller PDF.';
+    else if (file.type.startsWith('image/') || /\.(png|jpe?g|gif|bmp|tiff?|webp|heic)$/i.test(file.name)) fileError = 'This file appears to be an image, not a PDF. Export the image as a PDF and try again.';
+    else if (!/\.pdf$/i.test(file.name)) fileError = 'This file is not a .pdf document. Export it as a PDF instead of renaming its extension.';
+    if (fileError) {
+      notify(`${fileError} Nothing was uploaded.`, true);
       file = undefined;
       return;
     }
@@ -126,51 +133,38 @@ export function setupDocumentUpload(root, user) {
     notify(cleaned ? 'The upload was removed from this workspace. Your original file on your device is unchanged.' : 'The upload was cleared from this page, but server cleanup could not be confirmed. It will expire automatically within 15 minutes.', !cleaned);
   });
   const scanReview = root.querySelector('#scan-review');
-  const TYPE_LABELS = { SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number', OTHER_SENSITIVE: 'Other sensitive detail' };
+  let destroyReview;
   function clearReview() {
+    destroyReview?.();
+    destroyReview = undefined;
     scanReview.hidden = true;
-    root.querySelector('#scan-findings').replaceChildren();
     root.querySelector('#finding-count').textContent = '0';
     root.querySelector('#review-empty').hidden = false;
   }
   function renderReview(result) {
-    const list = root.querySelector('#scan-findings');
     const banner = root.querySelector('#scan-banner');
-    list.replaceChildren();
+    destroyReview?.();
     const problems = [];
     if (result.ai_status === 'user_skipped') problems.push('AI verification was skipped; only local checks ran.');
     else if (result.ai_status !== 'ok') problems.push(result.ai_status === 'disabled' ? 'AI analysis is turned off.' : 'The AI review could not be completed.');
-    if (result.unanalyzed_pages.length) problems.push(`Page${result.unanalyzed_pages.length === 1 ? '' : 's'} ${result.unanalyzed_pages.join(', ')} contain images or scanned content that cannot be analyzed yet.`);
+    if (result.unanalyzed_pages.length) problems.push(`Page${result.unanalyzed_pages.length === 1 ? '' : 's'} ${result.unanalyzed_pages.join(', ')} could not be fully analyzed (scanned content was unreadable or low confidence). Review those pages manually.`);
     const count = result.findings.length;
-    root.querySelector('#finding-count').textContent = String(count);
     root.querySelector('#review-empty').hidden = true;
     scanReview.hidden = false;
     if (count === 0 && result.complete) {
-      banner.textContent = 'Nothing in this PDF looks to need redaction.' + (result.ai_status === 'user_skipped' ? ' (AI verification was skipped; only local checks ran.)' : '');
+      banner.textContent = 'Nothing in this PDF looks to need redaction.' + (result.ai_status === 'user_skipped' ? ' (AI verification was skipped; only local checks ran.)' : '') + ' You can still add manual redactions.';
     } else if (count === 0) {
       banner.textContent = `No suggestions were found, but the scan was incomplete, so this is not a clean result. ${problems.join(' ')}`;
     } else {
-      banner.textContent = `${count} suggested ${count === 1 ? 'redaction' : 'redactions'} found. Values are masked here. ${problems.join(' ')}`;
+      banner.textContent = `${count} suggested ${count === 1 ? 'redaction' : 'redactions'} found. Values are masked here. Review them, add manual areas if needed, then approve. ${problems.join(' ')}`;
     }
     banner.classList.toggle('error', !result.complete);
-    for (const f of result.findings) {
-      const label = document.createElement('label');
-      label.className = 'finding';
-      const box = document.createElement('input');
-      box.type = 'checkbox';
-      box.checked = f.recommend_redaction;
-      const body = document.createElement('span');
-      const title = document.createElement('strong');
-      title.textContent = TYPE_LABELS[f.type] || f.type;
-      const value = document.createElement('span');
-      value.className = 'finding-value';
-      value.textContent = f.masked_text;
-      const detail = document.createElement('small');
-      detail.textContent = `Page ${f.page} · ${f.level} confidence · ${f.sources.join(' + ')} · ${f.reason}`;
-      body.append(title, value, detail);
-      label.append(box, body);
-      list.append(label);
-    }
+    destroyReview = createReview({ root, result, documentId, user, fileName: root.querySelector('#uploaded-name').textContent, onFinished: () => {
+      ++revision;
+      void discard();
+      reset();
+      notify('Your redacted PDF was downloaded and the temporary copy was deleted from our server.');
+    } });
   }
   const originalReset = reset;
   reset = function () { originalReset(); clearReview(); };
@@ -194,10 +188,12 @@ export function setupDocumentUpload(root, user) {
       if (!disposed && current === revision) scan.disabled = !documentId;
     }
   });
+  root.querySelector('#review-cancel').addEventListener('click', () => remove.click());
   const onPageHide = () => { ++revision; void discard(true); reset(); };
   window.addEventListener('pagehide', onPageHide);
   return () => {
     disposed = true;
+    destroyReview?.();
     ++revision;
     void discard(true);
     input.value = '';

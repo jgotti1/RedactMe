@@ -1,4 +1,4 @@
-"""Authenticated upload validation; deliberately no scan or download endpoints."""
+"""Authenticated temporary PDF upload, scan, review, redaction and download."""
 import asyncio
 import json
 import os
@@ -8,6 +8,9 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from starlette.background import BackgroundTask
+from pydantic import BaseModel, Field
+from app.redaction import service as redaction
 from starlette.requests import ClientDisconnect
 
 from app.auth.firebase import require_user
@@ -40,7 +43,13 @@ async def validate_pdf(data):
         except (ValueError, TypeError):
             raise HTTPException(422, "This PDF could not be validated. The upload was discarded.") from None
         messages = {
-            "size": "Choose a nonempty PDF no larger than 20 MB.",
+            "size": "This PDF exceeds the 20 MB limit. Upload a smaller PDF.",
+            "empty_file": "This file is empty (0 bytes) and contains no PDF data. Export or download it again.",
+            "image_file": "This file appears to be an image, not a PDF, even if its filename ends in .pdf. Export the image as a PDF and try again.",
+            "not_pdf": "This file does not contain a PDF header. It may be a different file type renamed to .pdf. Export or download a real PDF.",
+            "corrupt": "This PDF appears corrupted or incomplete: its structure or page data could not be read reliably. Export or download a fresh copy.",
+            "no_pages": "This PDF has no pages. Upload a PDF containing document pages.",
+            "no_content": "This PDF has no content: all pages appear empty, with no text, images, drawings or annotations to review.",
             "encrypted": "Password-protected PDFs are not supported. Upload an unlocked copy.",
             "pages": f"Choose a PDF containing 1 to {MAX_PAGES} pages.",
             "invalid": "This file is not a valid, readable PDF. Export a new PDF and try again.",
@@ -75,7 +84,9 @@ async def upload_pdf(document_id: UUID, request: Request,
                 size = int(length)
             except ValueError:
                 raise HTTPException(400, "Invalid upload size. The upload was discarded.") from None
-            if size <= 0 or size > MAX_BYTES:
+            if size == 0:
+                raise HTTPException(422, "This file is empty (0 bytes) and contains no PDF data. The upload was discarded.")
+            if size < 0 or size > MAX_BYTES:
                 raise HTTPException(413, "Choose a nonempty PDF no larger than 20 MB. The upload was discarded.")
         async def receive():
             async for chunk in request.stream():
@@ -133,8 +144,95 @@ async def scan_pdf(document_id: UUID, user: Annotated[dict, Depends(document_use
     item.scan = result
     return {"document_id": item.document_id, "status": "SCANNED", "complete": result["complete"],
             "ai_status": result["ai_status"], "unanalyzed_pages": result["unanalyzed_pages"],
-            "pages": result["pages"], "page_count": item.page_count, "expires_at": item.expires_at,
+            "pages": [{k: p[k] for k in ("page", "classification", "analyzed", "width", "height")}
+                      for p in result["pages"]], "page_count": item.page_count, "expires_at": item.expires_at,
             "findings": [f.public() for f in result["findings"]]}
+
+
+class ManualArea(BaseModel):
+    page: int = Field(ge=1, le=200)
+    rect: list[float] = Field(min_length=4, max_length=4)
+
+
+class RedactRequest(BaseModel):
+    finding_ids: list[str] = Field(default_factory=list, max_length=2000)
+    manual: list[ManualArea] = Field(default_factory=list, max_length=200)
+
+
+def _owned(document_id: UUID, user: dict):
+    store.expire()
+    item = store.documents.get(str(document_id))
+    if not item or item.owner != user["uid"] or not item.validated:
+        raise HTTPException(404, "This upload is unavailable or expired. Please upload the PDF again.")
+    return item
+
+
+@router.get("/{document_id}/pages/{page}/preview", summary="Render a page preview")
+async def page_preview(document_id: UUID, page: int, user: Annotated[dict, Depends(document_user)]):
+    item = _owned(document_id, user)
+    if not 1 <= page <= item.page_count:
+        raise HTTPException(404, "Page not found.")
+    try:
+        png = await redaction.render_preview(bytes(item.data), page)
+    except Exception:
+        raise HTTPException(502, "The page preview could not be created.") from None
+    return Response(png, media_type="image/png")
+
+
+@router.post("/{document_id}/redact", summary="Apply approved redactions and verify the result")
+async def redact_pdf(document_id: UUID, body: RedactRequest, user: Annotated[dict, Depends(document_user)]):
+    item = _owned(document_id, user)
+    if item.scan is None:
+        raise HTTPException(409, "Scan the document before redacting.")
+    if item.redacting:
+        raise HTTPException(409, "Redaction is already running for this document.")
+    item.redacting = True
+    item.output = None
+    try:
+        output, count = await asyncio.wait_for(redaction.redact(
+            bytes(item.data), item.scan, item.page_count, body.finding_ids,
+            [m.model_dump() for m in body.manual]), timeout=300)
+    except redaction.RedactionError as error:
+        message = str(error)
+        if message in ("unknown finding", "invalid manual area", "nothing selected"):
+            raise HTTPException(422, "Choose at least one valid redaction before continuing.") from None
+        safe_reasons = {
+            "verification unavailable": "Verification could not read the output PDF.",
+            "verification incomplete": "One or more output pages could not be fully verified, including OCR where required.",
+            "sanitization incomplete": "The output still contains metadata or attachments that must be removed.",
+            "redacted area still contains content": "Content remains inside a selected redaction area.",
+            "pixel verification unavailable": "The redacted image regions could not be verified.",
+            "redacted pixels not fully removed": "A selected image region was not fully redacted.",
+            "approved value still present": "An approved sensitive value still appears in the output.",
+        }
+        reason = safe_reasons.get(message, "The output PDF could not be verified.")
+        raise HTTPException(422, reason + " Download is blocked; nothing was released.") from None
+    except Exception:
+        raise HTTPException(502, "Redaction could not be completed and nothing was released. Please try again.") from None
+    finally:
+        item.redacting = False
+    if store.documents.get(str(document_id)) is not item:
+        raise HTTPException(409, "The upload was cancelled or expired.")
+    item.output = output
+    return {"document_id": item.document_id, "status": "VERIFIED", "redaction_count": count,
+            "size_bytes": len(output), "expires_at": item.expires_at}
+
+
+@router.get("/{document_id}/download", summary="Download the verified redacted PDF (single use)")
+async def download_pdf(document_id: UUID, user: Annotated[dict, Depends(document_user)]):
+    item = _owned(document_id, user)
+    if not item.output:
+        raise HTTPException(409, "No verified redacted file is available.")
+    content = bytes(item.output)
+    key, owner = str(document_id), user["uid"]
+
+    def purge():  # single use: original, output and findings are discarded after sending
+        current = store.documents.get(key)
+        if current is item:
+            store.remove(key, owner)
+            item.discard()
+    return Response(content, media_type="application/pdf", background=BackgroundTask(purge),
+                    headers={"Content-Disposition": 'attachment; filename="redacted.pdf"'})
 
 
 @router.delete("/{document_id}", status_code=204, summary="Discard a temporary PDF")

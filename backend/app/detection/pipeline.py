@@ -8,7 +8,9 @@ from pathlib import Path
 
 from . import openai_service, presidio_engine, rules
 from .models import Finding
-from .pages import build_pages, rects_for
+import shutil
+
+from .pages import build_pages, needs_ocr, rects_for
 
 SOURCE_PRIORITY = {"RULE": 3, "PRESIDIO": 2, "AI": 1}
 
@@ -61,8 +63,37 @@ def merge(pages, raw):
     return findings
 
 
+MAX_OCR_PAGES = 40
+
+
+async def _ocr(data: bytes, page_numbers: list) -> dict:
+    tesseract = shutil.which("tesseract") or next(
+        (c for c in ("/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract", "/usr/bin/tesseract") if os.path.exists(c)), None)
+    if not tesseract or not page_numbers:
+        return {}
+    process = await asyncio.create_subprocess_exec(
+        sys.executable, str(Path(__file__).with_name("ocr_runner.py")),
+        json.dumps({"pages": page_numbers[:MAX_OCR_PAGES], "tesseract": tesseract}),
+        stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
+        env={"PATH": os.defpath, "PYTHONIOENCODING": "utf-8", "PYTHONNOUSERSITE": "1"})
+    try:
+        output, _ = await asyncio.wait_for(process.communicate(data), timeout=180)
+        result = json.loads(output)
+        return {int(k): v for k, v in result.get("pages", {}).items()}
+    except Exception:
+        return {}  # pages stay unanalyzed, so the scan is reported incomplete
+    finally:
+        if process.returncode is None:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
+        await process.wait()
+
+
 async def scan(data: bytes, use_ai: bool = True) -> dict:
-    pages = build_pages(await _extract(data))
+    extracted = await _extract(data)
+    pages = build_pages(extracted, await _ocr(data, needs_ocr(extracted)))
     raw = [(*t, "RULE") for t in rules.detect(pages)]
     raw += [(*t, "PRESIDIO") for t in await asyncio.to_thread(presidio_engine.detect, pages)]
     ai_raw, ai_status = await openai_service.analyze(pages) if use_ai else ([], "user_skipped")
@@ -73,4 +104,5 @@ async def scan(data: bytes, use_ai: bool = True) -> dict:
     complete = not unanalyzed and ai_status in ("ok", "user_skipped")  # skipping is the user's explicit choice
     return {"findings": findings, "ai_status": ai_status, "unanalyzed_pages": unanalyzed,
             "complete": complete,
-            "pages": [{"page": p.page, "classification": p.classification, "analyzed": p.analyzed} for p in pages]}
+            "pages": [{"page": p.page, "classification": p.classification, "analyzed": p.analyzed,
+                       "width": e["width"], "height": e["height"]} for p, e in zip(pages, extracted["pages"])]}
