@@ -27,6 +27,7 @@ credentials/
 uploads/
 downloads/
 documents/
+!backend/app/documents/
 tmp/
 temp/
 *.sqlite

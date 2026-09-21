@@ -170,3 +170,20 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 .selection-summary { font-size: 10px; color: #50705c; padding: 0 23px 15px; }
 @media (max-width: 900px) { .workspace { padding: 30px 6%; } .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; gap: 16px; } .paper-stage { padding: 15px; } .sample-paper { padding: 20px; } }
 @media (max-width: 700px) { .workspace { max-width: 600px; } .workspace-grid { grid-template-columns: 1fr; } .workspace-heading { display: block; } .workspace-heading > .workspace-label { margin: 0 0 15px; } .workflow { gap: 10px; } .workflow li { display: block; } .workflow li > span { margin-bottom: 10px; } .workflow strong { font-size: 10px; } .workflow small { display: none; } .header-account { gap: 8px; } .header-account span { max-width: 110px; font-size: 10px; } .header-account button { padding: 10px; font-size: 10px; } .download-panel { flex-wrap: wrap; } .download-panel > div:nth-child(2) { flex: 1; } .download-panel button { width: 100%; margin: 0; } .upload-empty { margin: 18px; padding: 25px 12px; } }
+
+/* Temporary PDF upload states */
+#upload-prompt, #upload-ready { width: 100%; min-width: 0; }
+#upload-prompt .upload-symbol, #upload-ready .upload-symbol { margin: 0 auto; }
+#choose-pdf, #start-scan { margin: 0 auto; max-width: 240px; }
+#uploaded-name { overflow-wrap: anywhere; }
+.upload-empty .upload-alert { width: 100%; border: 1px solid #cbded0; background: #edf5ef; padding: 12px; border-radius: 8px; margin: 15px 0 0; color: #305c42; }
+.upload-empty .upload-alert.error { border-color: #e5b7b7; background: #fff3f1; color: #923638; }
+#upload-progress { padding: 30px 0; }
+#remove-pdf { margin-top: 15px; }
+
+.skip-ai { display: flex; gap: .5rem; align-items: flex-start; margin: 0 0 1rem; font-size: .875rem; text-align: left; }
+.skip-ai label { display: flex; gap: .5rem; align-items: flex-start; cursor: pointer; }
+.skip-ai input { margin-top: .2rem; }
+.tip { position: relative; cursor: help; flex: none; line-height: 1.4; }
+.tip-text { display: none; position: absolute; right: 0; bottom: 140%; width: min(20rem, 80vw); padding: .75rem; border-radius: .5rem; background: #1f2937; color: #fff; font-size: .8125rem; line-height: 1.45; z-index: 10; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.tip:hover .tip-text, .tip:focus .tip-text, .tip:focus-within .tip-text { display: block; }

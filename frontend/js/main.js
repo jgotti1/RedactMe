@@ -1,6 +1,6 @@
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { createEmailAccount, loginWithEmail, emailVerification, resetPassword, authErrorMessage } from "./email-auth.js";
-import { showWorkspace } from "./workspace.js";
+import { showWorkspace, disposeWorkspace } from "./workspace.js";
 
 const loginButton = document.querySelector("#google-login");
 const logoutButton = document.querySelector("#logout");
@@ -31,6 +31,7 @@ try {
   auth = firebase.auth;
   provider = firebase.googleProvider;
   onAuthStateChanged(auth, (user) => {
+    disposeWorkspace();
     document.querySelector("#login-page").hidden = Boolean(user);
     document.querySelector("#workspace").hidden = !user;
     document.querySelector("#header-account").hidden = !user;
