@@ -1,4 +1,5 @@
 import { setupDocumentUpload } from './document-upload.js';
+import { optionsPanelHtml } from './redaction-options.js';
 
 let disposeUpload;
 export function disposeWorkspace() {
@@ -18,6 +19,7 @@ export function showWorkspace(user) {
     <div class="workspace-heading"><div><p class="eyebrow">DOCUMENT WORKSPACE</p><h1 id="workspace-title" tabindex="-1">A little less visible.<br><span>A lot more private.</span></h1><p class="workspace-description">Review sensitive details. Choose what to redact. Share with confidence.</p></div><span class="workspace-label">Workspace preview</span></div>
     <ol class="workflow" aria-label="Document workflow"><li aria-current="step"><span>01</span><div><strong>Upload your PDF</strong><small>Start with a document</small></div></li><li><span>02</span><div><strong>Review & approve</strong><small>You make the decisions</small></div></li><li><span>03</span><div><strong>Redact & download</strong><small>Verify before sharing</small></div></li></ol>
     <div class="workspace-grid">
+      ${optionsPanelHtml()}
       <section class="document-area" aria-labelledby="document-title"><div class="panel-heading"><div><p class="eyebrow">YOUR DOCUMENT</p><h2 id="document-title">Start with a PDF</h2></div><span id="document-tag" class="workspace-label">No document</span></div>
         <div id="upload-empty" class="upload-empty">
           <div id="upload-prompt"><span class="upload-symbol" aria-hidden="true">↑</span><h3>Your next document starts here</h3><p>Choose a PDF to upload and validate.<br>You’ll review changes before any redaction.</p><input id="pdf-file" type="file" accept=".pdf,application/pdf" hidden><button id="choose-pdf" class="primary" type="button" aria-describedby="upload-note">Choose PDF <span aria-hidden="true">+</span></button></div>

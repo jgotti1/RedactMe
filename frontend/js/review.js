@@ -4,7 +4,7 @@ import { setWorkflow } from './workflow.js';
 const TYPE_LABELS = { SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number', OTHER_SENSITIVE: 'Other sensitive detail' };
 
 // Review, manual redaction, approval and download for one scanned document.
-export function createReview({ root, result, documentId, user, fileName = '', onFinished }) {
+export function createReview({ root, result, documentId, user, options, fileName = '', onFinished }) {
   const base = fileName.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').trim().slice(0, 120) || 'document';
   const outputName = `${base}_redacted.pdf`;
   let finished = false;
@@ -20,7 +20,9 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   const download = root.querySelector('#download-pdf');
   const downloadNote = root.querySelector('#download-note');
   const pages = new Map(result.pages.map(p => [p.page, p]));
-  const selected = new Set(result.findings.filter(f => f.recommend_redaction).map(f => f.id));
+  const enabled = f => options.isEnabled(f.type);
+  const visible = () => result.findings.filter(enabled);
+  const selected = new Set(result.findings.filter(f => f.recommend_redaction && enabled(f)).map(f => f.id));
   const manual = [];
   let page = 1;
   let drawing = false;
@@ -48,7 +50,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   }
   function paintOverlay() {
     overlay.replaceChildren();
-    for (const f of result.findings) {
+    for (const f of visible()) {
       if (f.page !== page) continue;
       for (const r of f.rects) overlay.append(box(r, selected.has(f.id) ? 'on' : 'off'));
     }
@@ -97,7 +99,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   function summary() {
     if (finished) { approve.disabled = true; toggle.disabled = true; return; }
     const total = selected.size + manual.length;
-    root.querySelector('#finding-count').textContent = String(result.findings.filter(f => f.page === page).length);
+    root.querySelector('#finding-count').textContent = String(visible().filter(f => f.page === page).length);
     toggle.disabled = busy || loadingPage;
     for (const input of list.querySelectorAll('input')) input.disabled = busy || finished;
     approve.disabled = busy || total === 0;
@@ -105,11 +107,12 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   }
   function renderList() {
     list.replaceChildren();
-    const currentFindings = result.findings.filter(f => f.page === page);
+    const currentFindings = visible().filter(f => f.page === page);
     if (!currentFindings.length) {
       const empty = document.createElement('p');
       empty.className = 'sample-disclaimer';
-      empty.textContent = `No suggested changes on page ${page}. You can still add a manual area.`;
+      const hidden = result.findings.filter(f => f.page === page && !enabled(f)).length;
+      empty.textContent = hidden ? `${hidden} detected ${hidden === 1 ? 'item is' : 'items are'} hidden by your redaction options on page ${page}. You can still add a manual area.` : `No suggested changes on page ${page}. You can still add a manual area.`;
       list.append(empty);
     }
     for (const f of currentFindings) {
@@ -200,6 +203,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   on(approve, 'click', async () => {
     if (busy || approve.disabled) return;
     busy = true;
+    options.setLocked(true);
     draft = undefined;
     summary();
     approve.textContent = 'Redacting & verifying…';
@@ -217,7 +221,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
     let failure = '';
     try {
       const outcome = await redactPdf(documentId, {
-        finding_ids: [...selected],
+        finding_ids: [...selected].filter(id => result.findings.some(f => f.id === id && enabled(f))),
         manual: manual.map(m => ({ page: m.page, rect: m.rect })),
       }, await user.getIdToken());
       if (disposed) return;
@@ -239,6 +243,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
       banner.textContent = failure;
     } finally {
       busy = false;
+      options.setLocked(finished);
       if (!disposed) {
         approve.textContent = 'Approve & redact';
         approve.classList.remove('working');
@@ -289,6 +294,23 @@ export function createReview({ root, result, documentId, user, fileName = '', on
     }
   });
 
+  const counts = {};
+  for (const f of result.findings) counts[f.type] = (counts[f.type] || 0) + 1;
+  options.setCounts(counts);
+  const wasEnabled = new Map(result.findings.map(f => [f.id, enabled(f)]));
+  const stopOptions = options.onChange(() => {
+    if (busy || finished || disposed) return;
+    invalidateDownload();
+    for (const f of result.findings) {
+      const now = enabled(f);
+      if (!now) selected.delete(f.id);
+      else if (!wasEnabled.get(f.id) && f.recommend_redaction) selected.add(f.id);
+      wasEnabled.set(f.id, now);
+    }
+    paintOverlay();
+    renderList();
+    summary();
+  });
   view.hidden = false;
   root.querySelector('#discard-restart').hidden = false;
   root.querySelector('#upload-empty').hidden = true;
@@ -298,6 +320,9 @@ export function createReview({ root, result, documentId, user, fileName = '', on
 
   return function destroy() {
     disposed = true;
+    stopOptions();
+    options.setLocked(false);
+    options.setCounts({});
     controller?.abort();
     cleanups.forEach(fn => fn());
     if (previewUrl) URL.revokeObjectURL(previewUrl);

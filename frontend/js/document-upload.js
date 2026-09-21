@@ -1,6 +1,7 @@
 import { uploadPdf, discardPdf, scanPdf } from './api.js';
 import { createReview } from './review.js';
 import { setWorkflow } from './workflow.js';
+import { setupRedactionOptions } from './redaction-options.js';
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
@@ -13,6 +14,7 @@ export function setupDocumentUpload(root, user) {
   const progress = root.querySelector('#upload-progress');
   const ready = root.querySelector('#upload-ready');
   const prompt = root.querySelector('#upload-prompt');
+  const options = setupRedactionOptions(root, user);
   let pending;
   let documentId;
   let token;
@@ -163,7 +165,7 @@ export function setupDocumentUpload(root, user) {
     }
     banner.classList.toggle('error', !result.complete);
     setWorkflow(root, 2, { sub: 'Choose what to redact' });
-    destroyReview = createReview({ root, result, documentId, user, fileName: root.querySelector('#uploaded-name').textContent, onFinished: () => {
+    destroyReview = createReview({ root, result, documentId, user, options, fileName: root.querySelector('#uploaded-name').textContent, onFinished: () => {
       ++revision;
       void discard();
       reset();
@@ -202,6 +204,7 @@ export function setupDocumentUpload(root, user) {
   window.addEventListener('pagehide', onPageHide);
   return () => {
     disposed = true;
+    options.destroy();
     destroyReview?.();
     ++revision;
     void discard(true);
