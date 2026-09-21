@@ -1,5 +1,6 @@
 import { uploadPdf, discardPdf, scanPdf } from './api.js';
 import { createReview } from './review.js';
+import { setWorkflow } from './workflow.js';
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
@@ -80,6 +81,7 @@ export function setupDocumentUpload(root, user) {
     prompt.hidden = true;
     progress.hidden = false;
     progress.textContent = 'Uploading and validating your PDF…';
+    setWorkflow(root, 1, { sub: 'Uploading and validating…' });
     remove.hidden = false;
     remove.textContent = 'Cancel upload';
     root.querySelector('#sample-open').disabled = true;
@@ -102,6 +104,7 @@ export function setupDocumentUpload(root, user) {
       root.querySelector('#uploaded-name').textContent = file.name;
       root.querySelector('#uploaded-details').textContent = `${result.page_count} ${result.page_count === 1 ? 'page' : 'pages'} · ${(result.size_bytes / 1024 / 1024).toFixed(2)} MB · PDF validated`;
       root.querySelector('#document-tag').textContent = 'Valid PDF';
+      setWorkflow(root, 1, { sub: 'PDF ready. Start the scan' });
       remove.textContent = 'Remove PDF';
       scan.disabled = false;
       expiry = setTimeout(() => {
@@ -159,6 +162,7 @@ export function setupDocumentUpload(root, user) {
       banner.textContent = `${count} suggested ${count === 1 ? 'redaction' : 'redactions'} found. Values are masked here. Review them, add manual areas if needed, then approve. ${problems.join(' ')}`;
     }
     banner.classList.toggle('error', !result.complete);
+    setWorkflow(root, 2, { sub: 'Choose what to redact' });
     destroyReview = createReview({ root, result, documentId, user, fileName: root.querySelector('#uploaded-name').textContent, onFinished: () => {
       ++revision;
       void discard();
@@ -167,13 +171,14 @@ export function setupDocumentUpload(root, user) {
     } });
   }
   const originalReset = reset;
-  reset = function () { originalReset(); clearReview(); };
+  reset = function () { originalReset(); clearReview(); setWorkflow(root, 1); };
   scan.addEventListener('click', async () => {
     if (!documentId || scan.disabled) return;
     const current = revision;
     scan.disabled = true;
     root.querySelector('#document-tag').textContent = 'Scanning';
     notify('Scanning your PDF. This can take a minute…');
+    setWorkflow(root, 2, { sub: 'Scanning your document…' });
     try {
       const result = await scanPdf(documentId, await user.getIdToken(), !root.querySelector('#skip-ai').checked);
       if (disposed || current !== revision) return;
@@ -183,12 +188,16 @@ export function setupDocumentUpload(root, user) {
     } catch (error) {
       if (disposed || current !== revision) return;
       root.querySelector('#document-tag').textContent = 'Scan failed';
+      setWorkflow(root, 1, { sub: 'Scan failed. Try again' });
       notify(error instanceof TypeError ? 'Unable to reach the backend. No review is available; try again.' : error.message, true);
     } finally {
       if (!disposed && current === revision) scan.disabled = !documentId;
     }
   });
   root.querySelector('#review-cancel').addEventListener('click', () => remove.click());
+  root.querySelector('#discard-restart').addEventListener('click', () => {
+    if (window.confirm('Discard this document and start over? Your selections and any redacted copy will be deleted. Your original file on your device is unchanged.')) remove.click();
+  });
   const onPageHide = () => { ++revision; void discard(true); reset(); };
   window.addEventListener('pagehide', onPageHide);
   return () => {

@@ -226,3 +226,13 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes slide { 0% { left: -35%; } 100% { left: 100%; } }
 @media (prefers-reduced-motion: reduce) { #approve-redact.working::before, .download-panel.working::after { animation: none; } }
+
+.workflow li.done > span { background: #dcefe3; color: #1f7a4a; border-color: #8fc7a5; font-weight: 700; }
+.workflow li.done strong { color: #1f7a4a; }
+.workflow li[aria-current] strong { color: #14372a; }
+.workflow li[aria-current] small { color: #205444; font-weight: 600; }
+.workflow li.busy > span { animation: step-pulse 1.2s ease-in-out infinite; }
+@keyframes step-pulse { 50% { box-shadow: 0 0 0 6px rgba(32,84,68,.18); } }
+@media (prefers-reduced-motion: reduce) { .workflow li.busy > span { animation: none; } }
+#discard-restart { justify-self: center; color: #923638; font-weight: 600; font-size: 13px; padding: 8px 12px; }
+#discard-restart:hover { text-decoration: underline; }

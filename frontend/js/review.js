@@ -1,4 +1,5 @@
 import { previewPage, redactPdf, downloadPdf } from './api.js';
+import { setWorkflow } from './workflow.js';
 
 const TYPE_LABELS = { SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number', OTHER_SENSITIVE: 'Other sensitive detail' };
 
@@ -203,6 +204,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
     summary();
     approve.textContent = 'Redacting & verifying…';
     approve.classList.add('working');
+    setWorkflow(root, 3, { sub: 'Redacting & verifying…' });
     approve.disabled = true;
     downloadNote.textContent = 'Working: removing the selected content and verifying the new PDF. This can take up to a minute; please keep this page open.';
     download.closest('.download-panel').classList.add('working');
@@ -224,6 +226,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
       downloadNote.textContent = 'Verified redacted PDF is ready. The download is available once and then the temporary copy is deleted.';
       download.disabled = false;
       download.classList.replace('secondary', 'primary');
+      setWorkflow(root, 3, { sub: 'Verified. Ready to download' });
       const panel = download.closest('.download-panel');
       panel.classList.add('ready');
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -231,6 +234,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
     } catch (error) {
       if (disposed) return;
       banner.classList.add('error');
+      setWorkflow(root, 2, { sub: 'Not released. See the message' });
       failure = error instanceof TypeError ? 'Unable to reach the backend. Nothing was released; try again.' : error.message;
       banner.textContent = failure;
     } finally {
@@ -264,6 +268,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
       link.click();
       link.remove();
       finished = true;
+      setWorkflow(root, 3, { complete: true, sub: 'Downloaded and cleared' });
       approve.disabled = true;
       toggle.disabled = true;
       const panel = download.closest('.download-panel');
@@ -285,6 +290,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
   });
 
   view.hidden = false;
+  root.querySelector('#discard-restart').hidden = false;
   root.querySelector('#upload-empty').hidden = true;
   renderList();
   summary();
@@ -299,6 +305,7 @@ export function createReview({ root, result, documentId, user, fileName = '', on
     image.removeAttribute('src');
     overlay.replaceChildren();
     view.hidden = true;
+    root.querySelector('#discard-restart').hidden = true;
     root.querySelector('#upload-empty').hidden = false;
     root.querySelector('#draw-hint').hidden = true;
     toggle.disabled = true;
