@@ -8,6 +8,7 @@ export function createReview({ root, result, documentId, user, options, fileName
   const base = fileName.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').trim().slice(0, 120) || 'document';
   const outputName = `${base}_redacted.pdf`;
   let finished = false;
+  let approved = false;
   const view = root.querySelector('#review-view');
   const image = root.querySelector('#page-image');
   const overlay = root.querySelector('#page-overlay');
@@ -92,6 +93,9 @@ export function createReview({ root, result, documentId, user, options, fileName
     }
   }
   function invalidateDownload() {
+    approved = false;
+    approve.classList.remove('approved');
+    if (!busy) approve.textContent = 'Approve & redact';
     download.disabled = true;
     download.closest('.download-panel').classList.remove('ready');
     downloadNote.textContent = 'Selections changed. Approve and verify the updated redactions before downloading.';
@@ -102,7 +106,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     root.querySelector('#finding-count').textContent = String(visible().filter(f => f.page === page).length);
     toggle.disabled = busy || loadingPage;
     for (const input of list.querySelectorAll('input')) input.disabled = busy || finished;
-    approve.disabled = busy || total === 0;
+    approve.disabled = busy || total === 0 || approved;
     note.textContent = total === 0 ? 'Select at least one item or add a manual area to continue. Nothing is redacted until you approve.' : `Showing page ${page}. ${total} selected ${total === 1 ? 'item' : 'items'} across the whole document will be redacted when you approve. Your original file is unchanged.`;
   }
   function renderList() {
@@ -228,6 +232,7 @@ export function createReview({ root, result, documentId, user, options, fileName
       if (outcome.status !== 'VERIFIED') throw new Error('Verification did not finish. Download remains blocked.');
       banner.textContent = `Verified. ${outcome.redaction_count} ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed and the new PDF passed verification. Download it below; it can be downloaded once.`;
       downloadNote.textContent = 'Verified redacted PDF is ready. The download is available once and then the temporary copy is deleted.';
+      approved = true;
       download.disabled = false;
       download.classList.replace('secondary', 'primary');
       setWorkflow(root, 3, { sub: 'Verified. Ready to download' });
@@ -245,7 +250,8 @@ export function createReview({ root, result, documentId, user, options, fileName
       busy = false;
       options.setLocked(finished);
       if (!disposed) {
-        approve.textContent = 'Approve & redact';
+        approve.textContent = approved ? 'PDF ready to download below ↓' : 'Approve & redact';
+        approve.classList.toggle('approved', approved);
         approve.classList.remove('working');
         download.closest('.download-panel').classList.remove('working');
         if (failure) downloadNote.textContent = 'The redacted file was not released. Review the message beside the Approve & redact button.';
@@ -339,6 +345,8 @@ export function createReview({ root, result, documentId, user, options, fileName
     toggle.setAttribute('aria-pressed', 'false');
     toggle.textContent = 'Add manual redaction';
     approve.disabled = true;
+    approve.textContent = 'Approve & redact';
+    approve.classList.remove('approved');
     download.disabled = true;
     download.closest('.download-panel').classList.remove('ready');
     download.textContent = 'Download PDF';

@@ -193,3 +193,14 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Possible follow-ups: server-side enforcement of enabled types if preferences move to a database; option to skip AI for disabled types to save cost; per-document overrides.
 - Options panel layout: widened to 330px to match the review panel (290 to 270px on narrower screens; stacks above the document at 900px and below), with larger 14px option text, 18px checkboxes and bold 13px group headings (Identity, Contact, Financial, Other) with an underline rule.
 - While a document is in review (`.workspace-grid.reviewing`, set by `review.js`), the options panel is hidden and the document area spans its column too, giving the page preview about double the width. The panel returns when the review ends (finish, discard or reset). Saved option choices still apply to the hidden panel; to change them, finish or discard the document. (At 900px and below the layout is unchanged: the panel is simply hidden.)
+
+## Session lifetime — September 21, 2026
+- Firebase Auth now uses in-memory persistence (`frontend/js/firebase.js`, `initializeAuth` with `inMemoryPersistence` and the popup resolver), so a page refresh or closed tab signs the user out; sessions are no longer restored from browser storage.
+- `frontend/js/main.js` also signs out after 15 minutes without pointer/keyboard/scroll/touch activity and after an absolute 8 hours, showing a notice on the login page. Sign-out disposes the workspace, which discards the temporary server upload.
+- Verified: build passes and Firebase initializes in headless Chrome. Real login, refresh sign-out and idle timeout still need a manual check with a signed-in browser. Limits are constants `IDLE_LIMIT_MS` and `SESSION_LIMIT_MS` in main.js.
+- Changes are local and uncommitted per the user's standing instruction.
+
+## Larger working area and approved state — September 21, 2026
+- Layout: `.workspace` max-width 1640px, the document section and download panel scaled with CSS `zoom: 1.25`, review/options panels `zoom: 1.12`, roomier gaps and upload box. Zoom is disabled at 1100px and below to keep small screens usable. Chrome, Safari and current Firefox support `zoom`.
+- After a successful Approve & redact, the button turns grey, is disabled and reads "PDF ready to download below ↓". Changing any selection, option or manual area re-enables it as "Approve & redact" and blocks the download until re-approved. Finish/discard resets it.
+- Verified with a headless Chrome screenshot and stubbed API. Changes are local and uncommitted per the user's instruction.

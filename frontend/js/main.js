@@ -14,6 +14,12 @@ const switchMode = document.querySelector("#switch-mode");
 const forgotPassword = document.querySelector("#forgot-password");
 const verificationPanel = document.querySelector("#verification-panel");
 const verificationStatus = document.querySelector("#verification-status");
+const IDLE_LIMIT_MS = 15 * 60 * 1000;
+const SESSION_LIMIT_MS = 8 * 60 * 60 * 1000;
+let signOutNotice = "";
+let idleTimer;
+let sessionTimer;
+let stopActivity;
 let mode = "login";
 let auth;
 let provider;
@@ -25,6 +31,29 @@ function setStatus(message, error = false) {
 }
 
 loginButton.disabled = true;
+function endSession(reason) {
+  signOutNotice = reason;
+  signOut(auth).catch(() => {});
+}
+function startSessionTimers() {
+  stopSessionTimers();
+  const resetIdle = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => endSession("You were signed out after 15 minutes of inactivity. Sign in again to continue."), IDLE_LIMIT_MS);
+  };
+  const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+  events.forEach((name) => window.addEventListener(name, resetIdle, { passive: true }));
+  stopActivity = () => events.forEach((name) => window.removeEventListener(name, resetIdle));
+  sessionTimer = setTimeout(() => endSession("Your session reached its 8 hour limit. Sign in again to continue."), SESSION_LIMIT_MS);
+  resetIdle();
+}
+function stopSessionTimers() {
+  clearTimeout(idleTimer);
+  clearTimeout(sessionTimer);
+  stopActivity?.();
+  stopActivity = undefined;
+}
+
 async function initializeAuth() {
 try {
   const firebase = await import("./firebase.js");
@@ -40,12 +69,15 @@ try {
     document.title = user ? "Workspace | Redact Me" : "Sign in | Redact Me";
     verificationPanel.hidden = !user || user.emailVerified || !user.providerData.some((provider) => provider.providerId === "password");
     if (user) {
+      startSessionTimers();
       showWorkspace(user);
       document.querySelector("#account").textContent = user.displayName || user.email || "Your account";
       document.querySelector("#workspace-title").focus();
     } else {
+      stopSessionTimers();
       document.querySelector("#account").textContent = "";
-      setStatus("Sign in with Google or your email address.");
+      setStatus(signOutNotice || "Sign in with Google or your email address.");
+      signOutNotice = "";
       setAuthBusy(false);
     }
   });

@@ -276,3 +276,15 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 .workspace-grid.reviewing .options-panel { display: none; }
 .workspace-grid.reviewing .document-area { grid-column: span 2; }
 @media (max-width: 900px) { .workspace-grid.reviewing .document-area { grid-column: auto; } }
+
+/* Larger working area: wider page, the document section scaled up 25%, roomier section boxes. */
+.workspace { max-width: 1640px; }
+.workspace-grid { gap: 28px; }
+.document-area { zoom: 1.25; }
+.download-panel { zoom: 1.25; }
+.review-panel, .options-panel { zoom: 1.12; }
+.document-area .upload-empty { min-height: 400px; margin: 30px; }
+.paper-stage { padding: 30px; }
+#approve-redact.approved, #approve-redact.approved:disabled { background: #9aa7a0; border-color: #9aa7a0; color: #fff; opacity: 1; cursor: not-allowed; justify-content: center; }
+@media (max-width: 1100px) { .document-area, .download-panel, .review-panel, .options-panel { zoom: 1; } }
+#approve-redact.approved { font-size: 14px; white-space: nowrap; }

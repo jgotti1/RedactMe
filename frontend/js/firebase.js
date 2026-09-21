@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from "firebase/auth";
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,6 +10,10 @@ const config = {
 if (Object.values(config).some((value) => !value)) {
   throw new Error("Firebase frontend configuration is missing. Check frontend/.env.");
 }
-export const auth = getAuth(initializeApp(config));
+// In-memory persistence: the sign-in lives only in this page, so refreshing or closing the tab signs the user out.
+export const auth = initializeAuth(initializeApp(config), {
+  persistence: inMemoryPersistence,
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
