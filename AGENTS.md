@@ -70,7 +70,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 
 ## Public repository preparation — September 21, 2026
 - Public GitHub repository: `jgotti1/RedactMe`; local `origin` points to it.
-- Expanded Git exclusions for credentials and keys, private PDFs and document folders, temporary processing files, databases, logs, backups, archives and local editor/agent state. Keep sanitized `.env.example` files tracked.
+- Expanded Git exclusions for credentials and keys, private PDFs and document folders, temporary processing files, databases, logs, backups, archives and local editor/agent state.
+- Removed both `.env.example` files at the user's request. All `.env.*` files are now ignored; README documents the required configuration variable names. Existing private `.env` files remain local.
 - Checked publishable files and existing Git history against known local secret values and credential patterns; no matches found. Confirmed local environment files, planning reference and Firebase service-account JSON are ignored.
 - Frontend production build and all 10 backend tests passed before preparing the project commit.
 - Git ignore rules do not protect already tracked files or detect arbitrary secrets in source. Review staged changes before every public push.

@@ -33,7 +33,7 @@ python3 -m venv backend/.venv
 backend/.venv/bin/python -m pip install -r backend/requirements-dev.txt
 ```
 
-Local `.env` files have been created. On a fresh checkout, copy `.env.example` to `.env` and `frontend/.env.example` to `frontend/.env`. Fill the frontend template with the Firebase web configuration from Project settings → General → Your apps. Only public configuration may use `VITE_*` names.
+Local `.env` files have been created and remain private. On a fresh checkout, create a root `.env` with `FIREBASE_PROJECT_ID`, `GOOGLE_APPLICATION_CREDENTIALS` and `FRONTEND_ORIGINS`. Create `frontend/.env` with `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID` and `VITE_API_BASE_URL`. Get the Firebase web configuration from Project settings → General → Your apps; use `http://127.0.0.1:8000` for the local API URL. Only public configuration may use `VITE_*` names. Environment example files are intentionally omitted.
 
 ## Firebase backend credentials
 
