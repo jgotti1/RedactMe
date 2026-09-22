@@ -297,7 +297,10 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Rationale: user explicitly approves selections, app should trust their judgment and move forward with redaction without second-guessing.
 - Note: this changes the security posture; original design mandated verification fail-closed to prevent accidental incomplete redactions. User accepts this trade-off for workflow simplicity.
 
-## "Discard & start over" button visibility — September 21, 2026
-- Improved button styling in review panel: full-width button with light red background, red border, and rounded corners.
-- Button is now more prominent and easier to find when the user wants to clear the current document and restart.
-- Behavior unchanged: shows confirmation dialog, then discards document and resets workflow to step 1 (upload).
+## Review panel button layout refinement — September 21, 2026
+- Redesigned review actions for professional appearance and clear visual hierarchy.
+- Secondary buttons (Add manual redaction, Go to next unviewed) now display side-by-side at top in compact size.
+- Primary action "Approve & redact" is full-width, green, and clearly dominant.
+- Partial approval state (not all pages reviewed): button remains green with subtle opacity instead of jarring yellow.
+- Discard & start over: small text link at bottom, understated and out of primary workflow.
+- Result: Clean, professional layout with one clear primary action and supporting secondary actions tucked away. Committed `eadbe0a`.
