@@ -283,4 +283,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Repositioned the workspace introduction heading (DOCUMENT WORKSPACE / "A little less visible. A lot more private.") to the top-right of the header.
 - Account controls (user name and Sign out button) now stack vertically directly below the heading, maintaining right alignment.
 - All elements are right-aligned with consistent spacing; mobile layout remains responsive with centered elements.
-- Frontend production build pending. Changes ready for visual QA before publishing.
+- Frontend production build passed. Committed and pushed.
+
+## Approval flow verification — September 21, 2026
+- Verified the "Approve without full review" button behavior: button requires selections/manual areas to be clickable, shows confirmation dialog when clicked, and proceeds with redaction after user confirms.
+- Note: button only appears and is enabled when items are selected (`total > 0`); empty selection will show disabled button. This is correct behavior (nothing to redact = no approval needed).
