@@ -242,3 +242,31 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Standardized visible branding as RedactMe, including sign-in form modes, page titles and options text. Authentication and document processing behavior are unchanged.
 - Validation: frontend production build and diff whitespace check passed. Earlier desktop Chrome checks verified placement; full mobile visual QA remains pending. Backend code is unchanged.
 - Publication scope: AGENTS.md, frontend/index.html, frontend/css/styles.css, frontend/js/main.js and frontend/js/redaction-options.js. Private configuration and credentials remain excluded.
+
+## Workspace background and workflow alignment — September 21, 2026
+- Signed-in workspace now shares the splash screen's gradient and 3% darker background tint.
+- Centered the three workflow steps within their equal-width columns; mobile numbers and labels are centered too. Workflow behavior is unchanged.
+- Frontend production build passed. These follow-up changes are local and uncommitted.
+
+## Workspace brand alignment and step connectors — September 21, 2026
+- Aligned the signed-in brand block with the options panel by matching header insets to the workspace at desktop and mobile breakpoints. Added 12 px of top breathing room.
+- Added muted connecting rules between workflow groups; mobile rules connect the numbered circles without crossing labels. Splash positioning and workflow behavior are unchanged.
+- Frontend production build and diff whitespace check passed. Changes remain local and uncommitted; live signed-in visual QA remains pending.
+
+## Larger workspace status and account details — September 21, 2026
+- Increased the screenshot-highlighted account/sign-out text, Workspace preview label, workflow titles, subtitles and step numbers by 2 px. Enlarged the numbered circles from 33 to 37 px and added slightly more status-bar padding.
+- Kept mobile typography proportional and adjusted connecting-rule positions for the larger circles.
+- Frontend production build passed. Changes remain local and uncommitted.
+
+## Compact workspace introduction in header — September 21, 2026
+- Removed the Workspace preview label and box. Moved the document-workspace introduction into the top-right header above the account name and sign-out button, using smaller heading sizing and right alignment to fit beside the brand.
+- Removed the former introduction row from the workspace and reduced top padding so the workflow and document panels move upward. Header wraps on smaller screens; the introduction is hidden along with signed-out account controls. The workspace heading's existing focus target is preserved.
+- Frontend production build and diff whitespace check passed. Live signed-in visual QA remains pending. Changes remain local and uncommitted.
+
+## Account controls above introduction — September 21, 2026
+- Reordered the signed-in header so the account name and sign-out button appear above the introduction block, matching visual and DOM order. Supersedes the previous introduction-above-account arrangement.
+- Frontend production build passed. Changes remain local and uncommitted.
+
+## Introduction between brand and account — September 21, 2026
+- Moved the desktop workspace introduction into the open header space between the brand and account controls, following the user's annotated screenshot. Introduction is left-aligned; account controls remain at the far top right. Smaller screens retain the stacked header.
+- Supersedes the desktop introduction-below-account layout. Frontend production build and diff whitespace check passed; live signed-in visual QA remains pending. Changes remain local and uncommitted.

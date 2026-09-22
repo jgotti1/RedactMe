@@ -434,8 +434,8 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
   .login-column { margin-top: -10mm; }
 }
 
-/* Darken only the signed-out splash background by three percent. */
-body:has(#login-page:not([hidden])) {
+/* Shared splash and signed-in background, three percent darker. */
+body {
   background: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%)), radial-gradient(ellipse at 5% 45%, #dfebe580, transparent 60%), #f5f7f6;
 }
 
@@ -448,3 +448,92 @@ body:has(#login-page:not([hidden])) footer { font-size: 12px; }
 /* Align the complete splash title with the privacy notice. */
 body:has(#login-page:not([hidden])) .site-header .brand { align-self: flex-start; transform: none; }
 body:has(#login-page:not([hidden])) .site-header .privacy-note { position: relative; top: calc(8px + 3mm); }
+
+/* Center each workflow step within its equal-width column. */
+.workflow li { justify-content: center; }
+@media (max-width: 700px) {
+  .workflow li { text-align: center; }
+  .workflow li > span { margin-inline: auto; }
+}
+
+/* Match the signed-in brand to the workspace/options-panel inset. */
+body:has(#workspace:not([hidden])) .site-header {
+  padding-inline: max(40px, calc((100% - 1640px) / 2 + 40px));
+  padding-top: 18px;
+}
+body:has(#workspace:not([hidden])) .site-header .brand { align-self: flex-start; }
+@media (max-width: 900px) {
+  body:has(#workspace:not([hidden])) .site-header { padding-inline: 6%; }
+}
+@media (max-width: 700px) {
+  body:has(#workspace:not([hidden])) .site-header {
+    padding-inline: max(6%, calc((100% - 600px) / 2 + 6%));
+  }
+}
+
+/* Connect the three centered workflow groups without crossing their labels. */
+.workflow li::before, .workflow li::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #a9bdb1;
+}
+.workflow li:first-child::before, .workflow li:last-child::after { visibility: hidden; }
+.workflow li { position: relative; }
+.workflow li:not(:last-child)::after { margin-right: -15px; }
+@media (max-width: 700px) {
+  .workflow li::before, .workflow li::after { position: absolute; top: 16px; width: calc(50% - 22px); }
+  .workflow li::before { left: -5px; }
+  .workflow li::after { right: -5px; }
+  .workflow li:not(:last-child)::after { margin-right: 0; }
+}
+
+/* Slightly larger account controls and workspace progress details. */
+.header-account, .header-account button { font-size: 14px; }
+.workspace-heading > .workspace-label { font-size: 12px; padding: 9px 12px; }
+.workflow { padding-block: 23px; }
+.workflow strong { font-size: 14px; }
+.workflow small { font-size: 12px; }
+.workflow li > span { width: 37px; height: 37px; font-size: 14px; }
+@media (max-width: 700px) {
+  .header-account span, .header-account button { font-size: 12px; }
+  .workflow strong { font-size: 12px; }
+  .workflow li::before, .workflow li::after { top: 18px; width: calc(50% - 24px); }
+}
+
+/* Compact signed-in introduction above the account controls. */
+.workspace-header:has(#header-account[hidden]) { display: none; }
+.workspace-header { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; min-width: 0; max-width: 500px; text-align: right; }
+.workspace-header .workspace-heading { display: block; }
+.workspace-header .eyebrow { margin: 0 0 6px; }
+.workspace-header .workspace-heading h1 { font-size: clamp(25px, 2.3vw, 34px); line-height: 1.12; margin: 0 0 8px; }
+.workspace-header .workspace-description { margin: 0; font-size: 12px; }
+body:has(#workspace:not([hidden])) .site-header { align-items: flex-start; padding-bottom: 18px; }
+body:has(#workspace:not([hidden])) .site-header .brand-block { width: auto; max-width: none; flex-shrink: 0; }
+.workspace { padding-top: 16px; }
+.workflow { margin-top: 0; }
+@media (max-width: 1100px) {
+  body:has(#workspace:not([hidden])) .site-header { flex-wrap: wrap; }
+  .workspace-header { margin-left: auto; }
+}
+@media (max-width: 700px) {
+  .workspace-header { max-width: 100%; gap: 10px; }
+  .workspace-header .workspace-heading h1 { font-size: 25px; }
+}
+
+/* Place the introduction in the open header space beside the account controls. */
+@media (min-width: 1101px) {
+  .workspace-header {
+    flex: 1;
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 28px;
+    text-align: left;
+    padding-top: 10px;
+  }
+  .workspace-header .workspace-heading { grid-column: 1; grid-row: 1; justify-self: center; max-width: 360px; }
+  .workspace-header .header-account { grid-column: 2; grid-row: 1; }
+  .workspace-header .workspace-heading h1 { font-size: clamp(25px, 2vw, 32px); }
+}

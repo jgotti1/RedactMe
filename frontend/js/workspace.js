@@ -16,7 +16,7 @@ export function showWorkspace(user) {
   disposeWorkspace();
   const root = document.querySelector('#workspace-content');
   root.innerHTML = `
-    <div class="workspace-heading"><div><p class="eyebrow">DOCUMENT WORKSPACE</p><h1 id="workspace-title" tabindex="-1">A little less visible.<br><span>A lot more private.</span></h1><p class="workspace-description">Review sensitive details. Choose what to redact. Share with confidence.</p></div><span class="workspace-label">Workspace preview</span></div>
+
     <ol class="workflow" aria-label="Document workflow"><li aria-current="step"><span>01</span><div><strong>Upload your PDF</strong><small>Start with a document</small></div></li><li><span>02</span><div><strong>Review & approve</strong><small>You make the decisions</small></div></li><li><span>03</span><div><strong>Redact & download</strong><small>Verify before sharing</small></div></li></ol>
     <div class="workspace-grid">
       ${optionsPanelHtml()}
