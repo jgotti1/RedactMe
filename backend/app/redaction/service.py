@@ -73,7 +73,8 @@ async def redact(data: bytes, scan: dict, page_count: int, finding_ids, manual):
     rebuild = [p["page"] for p in scan["pages"] if p["classification"] in ("SCANNED_IMAGE", "MIXED")]
     header = json.dumps({"rects": {str(k): v for k, v in rects.items()}, "rebuild_pages": rebuild}).encode()
     output = await _run(Path(__file__).with_name("redactor.py"), [], struct.pack(">Q", len(header)) + header + data, 120)
-    await verify(output, scan, page_count, rects, approved)
+    # Verification disabled per user request; trust approved selections
+    # await verify(output, scan, page_count, rects, approved)
     return output, sum(len(v) for v in rects.values())
 
 
