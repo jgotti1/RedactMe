@@ -229,8 +229,11 @@ export function createReview({ root, result, documentId, user, options, fileName
   });
 
   on(approve, 'click', async () => {
-    if (busy || approve.disabled) return;
-    if (reviewed.size < pages.size) {
+    if (busy) return;
+    const allReviewed = reviewed.size >= pages.size;
+    const total = selected.size + manual.length;
+    if (total === 0) return;
+    if (!allReviewed) {
       const left = pages.size - reviewed.size;
       if (!window.confirm(`Warning: you have not viewed ${left} of ${pages.size} pages. Approving now means you are redacting blindly: unseen pages may contain items you would have wanted to change.\n\nApprove anyway?`)) return;
     }
