@@ -77,6 +77,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #74a98c; outline-offs
 .primary:hover { background: #2c6b54; }
 .secondary { color: #496353; border: 1px solid #d6e0d7; background: white; white-space: nowrap; }
 .secondary:hover { background: #f3f7f3; }
+.outline { color: #1a2524; border: 1px solid #4a6155; background: white; white-space: nowrap; }
+.outline:hover { background: #f8faf9; border-color: #3a5147; }
 footer { border-top: 1px solid #dfe7e3; color: #74857a; font-size: 10px; }
 footer a { color: #526d5d; text-underline-offset: 3px; }
 .powered { letter-spacing: .2px; }

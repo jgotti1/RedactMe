@@ -304,3 +304,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Partial approval state (not all pages reviewed): button remains green with subtle opacity instead of jarring yellow.
 - Discard & start over: small text link at bottom, understated and out of primary workflow.
 - Result: Clean, professional layout with one clear primary action and supporting secondary actions tucked away. Committed `eadbe0a`.
+
+## Add manual redaction button styling — September 21, 2026
+- Added `.outline` CSS class for tertiary button actions: white background, dark green border (#4a6155), dark text (#1a2524), subtle hover state.
+- Changed "Add manual redaction" button from `.secondary` to `.outline` class for more professional, refined appearance.
+- Result: Clear visual hierarchy with primary action (green), secondary action (white, light border), and tertiary action (white, dark border) distinct from each other. Frontend build passes.
