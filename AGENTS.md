@@ -269,4 +269,11 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 
 ## Introduction between brand and account — September 21, 2026
 - Moved the desktop workspace introduction into the open header space between the brand and account controls, following the user's annotated screenshot. Introduction is left-aligned; account controls remain at the far top right. Smaller screens retain the stacked header.
-- Supersedes the desktop introduction-below-account layout. Frontend production build and diff whitespace check passed; live signed-in visual QA remains pending. Changes remain local and uncommitted.
+- Supersedes the desktop introduction-below-account layout. Frontend production build and diff whitespace check passed; live signed-in visual QA remains pending.
+- Committed and pushed September 21, 2026 with workspace background and workflow alignment changes.
+
+## Workspace background and workflow centering — September 21, 2026
+- Signed-in workspace now shares the splash screen's gradient background (radial gradient with 3% darker overlay tint); matches login page appearance.
+- Centered the three workflow steps (1-2-3 status bar) horizontally on the page; step indicators and labels are centered within each column. Mobile layout also centers elements.
+- Moved workspace introduction heading from inside the content area to the header, positioned between the brand and account controls.
+- Frontend production build passed. Committed and pushed as `73b11f3` with the message "Match workspace background to splash screen and center workflow status bar."
