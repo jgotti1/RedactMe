@@ -285,6 +285,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - All elements are right-aligned with consistent spacing; mobile layout remains responsive with centered elements.
 - Frontend production build passed. Committed and pushed.
 
-## Approval flow verification — September 21, 2026
-- Verified the "Approve without full review" button behavior: button requires selections/manual areas to be clickable, shows confirmation dialog when clicked, and proceeds with redaction after user confirms.
-- Note: button only appears and is enabled when items are selected (`total > 0`); empty selection will show disabled button. This is correct behavior (nothing to redact = no approval needed).
+## Approval flow fix — September 21, 2026
+- Fixed "Approve without full review" button: was blocked by disabled state check in click handler.
+- Changed logic to check only if already busy, calculate approval state locally, show confirmation only if pages not fully reviewed, and proceed with redaction after user confirms.
+- Now button works as intended: displays warning dialog for unreviewed pages, and clicking OK proceeds with redaction exactly like normal "Approve & redact" after full review.
+- Committed `c15ed00`.
