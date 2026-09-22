@@ -24,6 +24,7 @@ class Finding:
     reason: str = ""
     recommend: bool = True
     rects: list = field(default_factory=list)
+    levels: set = field(default_factory=set)  # sensitivity levels at which this finding is shown
 
     @staticmethod
     def mask(text: str) -> str:
@@ -40,4 +41,5 @@ class Finding:
         return {"id": self.id, "page": self.page, "type": self.type,
                 "masked_text": self.mask(self.text), "level": self.level,
                 "sources": sorted(self.sources), "reason": self.reason,
-                "recommend_redaction": self.recommend, "rects": self.rects}
+                "recommend_redaction": self.recommend, "rects": self.rects,
+                "levels": sorted(self.levels)}

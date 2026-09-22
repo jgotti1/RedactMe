@@ -150,19 +150,18 @@ export function setupDocumentUpload(root, user) {
     const banner = root.querySelector('#scan-banner');
     destroyReview?.();
     const problems = [];
-    if (result.ai_status === 'user_skipped') problems.push('AI verification was skipped; only local checks ran.');
-    else if (result.ai_status !== 'ok') problems.push(result.ai_status === 'disabled' ? 'AI analysis is turned off.' : 'The AI review could not be completed.');
     if (result.unanalyzed_pages.length) problems.push(`Page${result.unanalyzed_pages.length === 1 ? '' : 's'} ${result.unanalyzed_pages.join(', ')} could not be fully analyzed (scanned content was unreadable or low confidence). Review those pages manually.`);
-    const count = result.findings.length;
+    const count = result.findings.filter(f => (f.levels || []).includes(result.sensitivity)).length;
     root.querySelector('#review-empty').hidden = true;
     scanReview.hidden = false;
     if (count === 0 && result.complete) {
-      banner.textContent = 'Nothing in this PDF looks to need redaction.' + (result.ai_status === 'user_skipped' ? ' (AI verification was skipped; only local checks ran.)' : '') + ' You can still add manual redactions.';
+      banner.textContent = 'Nothing in this PDF looks to need redaction.' + ' You can still add manual redactions.';
     } else if (count === 0) {
       banner.textContent = `No suggestions were found, but the scan was incomplete, so this is not a clean result. ${problems.join(' ')}`;
     } else {
       banner.textContent = `${count} suggested ${count === 1 ? 'redaction' : 'redactions'} found. Values are masked here. Review them, add manual areas if needed, then approve. ${problems.join(' ')}`;
     }
+    if (count === 0 && result.findings.length) banner.textContent += ' Move the sensitivity slider above the page to see more possibilities.';
     banner.classList.toggle('error', !result.complete);
     setWorkflow(root, 2, { sub: 'Choose what to redact' });
     destroyReview = createReview({ root, result, documentId, user, options, fileName: root.querySelector('#uploaded-name').textContent, onFinished: () => {
@@ -182,7 +181,7 @@ export function setupDocumentUpload(root, user) {
     notify('Scanning your PDF. This can take a minute…');
     setWorkflow(root, 2, { sub: 'Scanning your document…' });
     try {
-      const result = await scanPdf(documentId, await user.getIdToken(), !root.querySelector('#skip-ai').checked);
+      const result = await scanPdf(documentId, await user.getIdToken(), options.getTerms(), options.getSensitivity());
       if (disposed || current !== revision) return;
       alert.hidden = true;
       root.querySelector('#document-tag').textContent = 'Scan complete';

@@ -78,7 +78,7 @@ Backend tests use synthetic tokens and mocked Firebase verification. A real Goog
 
 ## Current limits
 
-No PDF processing or OpenAI requests are implemented. The root OpenAI key is reserved for a future backend phase and must be replaced before use because it was shared in chat. No passwords or documents are stored by this foundation.
+Documents are processed in memory and never stored permanently; no third-party AI service is used. No passwords are stored by this app.
 
 References: [Firebase Google login](https://firebase.google.com/docs/auth/web/google-signin), [Firebase ID token verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens), [FastAPI CORS](https://fastapi.tiangolo.com/tutorial/cors/), [Vite environment variables](https://vite.dev/guide/env-and-mode).
 

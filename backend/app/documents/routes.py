@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 import sys
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -122,9 +122,14 @@ async def document_status(document_id: UUID, user: Annotated[dict, Depends(docum
     return item.summary()
 
 
+class ScanRequest(BaseModel):
+    terms: list[str] = Field(default_factory=list, max_length=50)
+    sensitivity: Literal["low", "balanced", "high"] = "balanced"
+
+
 @router.post("/{document_id}/scan", summary="Scan a temporary PDF for sensitive information")
 async def scan_pdf(document_id: UUID, user: Annotated[dict, Depends(document_user)],
-                   use_ai: bool = True):
+                   body: ScanRequest | None = None):
     store.expire()
     item = store.documents.get(str(document_id))
     if not item or item.owner != user["uid"] or not item.validated:
@@ -133,9 +138,9 @@ async def scan_pdf(document_id: UUID, user: Annotated[dict, Depends(document_use
         raise HTTPException(409, "A scan is already running for this document.")
     item.scanning = True
     try:
-        result = await asyncio.wait_for(pipeline.scan(bytes(item.data), use_ai), timeout=240)
+        result = await asyncio.wait_for(pipeline.scan(bytes(item.data), body.terms if body else (), body.sensitivity if body else "balanced"), timeout=240)
     except Exception:
-        # Fail closed and never echo parser/model errors, which may contain document content.
+        # Fail closed and never echo parser errors, which may contain document content.
         raise HTTPException(502, "The scan could not be completed, so no review is available. Please try again.") from None
     finally:
         item.scanning = False
@@ -143,7 +148,7 @@ async def scan_pdf(document_id: UUID, user: Annotated[dict, Depends(document_use
         raise HTTPException(409, "The upload was cancelled or expired.")
     item.scan = result
     return {"document_id": item.document_id, "status": "SCANNED", "complete": result["complete"],
-            "ai_status": result["ai_status"], "unanalyzed_pages": result["unanalyzed_pages"],
+            "unanalyzed_pages": result["unanalyzed_pages"], "sensitivity": result["sensitivity"],
             "pages": [{k: p[k] for k in ("page", "classification", "analyzed", "width", "height")}
                       for p in result["pages"]], "page_count": item.page_count, "expires_at": item.expires_at,
             "findings": [f.public() for f in result["findings"]]}

@@ -1,7 +1,9 @@
 import { previewPage, redactPdf, downloadPdf } from './api.js';
 import { setWorkflow } from './workflow.js';
+import { SENSITIVITY_LEVELS } from './redaction-options.js';
 
-const TYPE_LABELS = { SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number', OTHER_SENSITIVE: 'Other sensitive detail' };
+const SOURCE_LABELS = { RULE: 'Pattern check', PRESIDIO: 'Name/entity model', CUSTOM: 'Your term', REPEAT: 'Repeat of a found value' };
+const TYPE_LABELS = { CUSTOM: 'Custom term', SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number' };
 
 // Review, manual redaction, approval and download for one scanned document.
 export function createReview({ root, result, documentId, user, options, fileName = '', onFinished }) {
@@ -16,12 +18,14 @@ export function createReview({ root, result, documentId, user, options, fileName
   const toggle = root.querySelector('#manual-toggle');
   const approve = root.querySelector('#approve-redact');
   const note = root.querySelector('#review-note');
+  const nextUnviewed = root.querySelector('#next-unviewed');
   const list = root.querySelector('#scan-findings');
   const banner = root.querySelector('#scan-banner');
   const download = root.querySelector('#download-pdf');
   const downloadNote = root.querySelector('#download-note');
   const pages = new Map(result.pages.map(p => [p.page, p]));
-  const enabled = f => options.isEnabled(f.type);
+  let level = options.getSensitivity();
+  const enabled = f => options.isEnabled(f.type) && (f.levels || []).includes(level);
   const visible = () => result.findings.filter(enabled);
   const selected = new Set(result.findings.filter(f => f.recommend_redaction && enabled(f)).map(f => f.id));
   const manual = [];
@@ -32,6 +36,7 @@ export function createReview({ root, result, documentId, user, options, fileName
   let controller;
   let busy = false;
   let loadingPage = false;
+  const reviewed = new Set();
   let pageRequest = 0;
   let disposed = false;
   let manualSeq = 0;
@@ -65,9 +70,10 @@ export function createReview({ root, result, documentId, user, options, fileName
     loadingPage = true;
     image.hidden = true;
     overlay.hidden = true;
-    label.textContent = `Page ${page} of ${result.pages.length}`;
     root.querySelector('#prev-page').disabled = page <= 1;
     root.querySelector('#next-page').disabled = page >= result.pages.length;
+    root.querySelector('#first-page').disabled = page <= 1;
+    root.querySelector('#last-page').disabled = page >= result.pages.length;
     renderList();
     summary();
     controller?.abort();
@@ -82,6 +88,7 @@ export function createReview({ root, result, documentId, user, options, fileName
       await image.decode();
       if (disposed || request !== pageRequest) return;
       loadingPage = false;
+      reviewed.add(n);
       image.hidden = false;
       overlay.hidden = false;
       paintOverlay();
@@ -106,8 +113,18 @@ export function createReview({ root, result, documentId, user, options, fileName
     root.querySelector('#finding-count').textContent = String(visible().filter(f => f.page === page).length);
     toggle.disabled = busy || loadingPage;
     for (const input of list.querySelectorAll('input')) input.disabled = busy || finished;
+    const allReviewed = reviewed.size >= pages.size;
+    label.textContent = `Page ${page} of ${pages.size} · ${reviewed.size} of ${pages.size} reviewed`;
     approve.disabled = busy || total === 0 || approved;
-    note.textContent = total === 0 ? 'Select at least one item or add a manual area to continue. Nothing is redacted until you approve.' : `Showing page ${page}. ${total} selected ${total === 1 ? 'item' : 'items'} across the whole document will be redacted when you approve. Your original file is unchanged.`;
+    slider.disabled = busy || finished;
+    stops.forEach(stop => { stop.disabled = busy || finished; });
+    note.classList.toggle('gate', !allReviewed && !finished);
+    approve.classList.toggle('partial', !allReviewed && !approved);
+    if (!busy && !approved && !finished) approve.textContent = allReviewed ? 'Approve & redact' : `Approve without full review (${reviewed.size} of ${pages.size} viewed)`;
+    const missing = [...pages.keys()].filter(n => !reviewed.has(n));
+    nextUnviewed.hidden = allReviewed || finished;
+    nextUnviewed.disabled = busy;
+    note.textContent = !allReviewed ? `Not every page has been viewed. Not viewed yet: page${missing.length === 1 ? '' : 's'} ${missing.slice(0, 8).join(', ')}${missing.length > 8 ? '…' : ''}.` : total === 0 ? 'Select at least one item or add a manual area to continue. Nothing is redacted until you approve.' : `Showing page ${page}. ${total} selected ${total === 1 ? 'item' : 'items'} across the whole document will be redacted when you approve. Your original file is unchanged.`;
   }
   function renderList() {
     list.replaceChildren();
@@ -133,7 +150,7 @@ export function createReview({ root, result, documentId, user, options, fileName
       value.className = 'finding-value';
       value.textContent = f.masked_text;
       const detail = document.createElement('small');
-      detail.textContent = `Page ${f.page} · ${f.level} confidence · ${f.sources.join(' + ')} · ${f.reason}`;
+      detail.textContent = `Page ${f.page} · ${f.level} confidence · ${f.sources.map(x => SOURCE_LABELS[x] || x).join(' + ')} · ${f.reason}`;
       body.append(title, value, detail);
       row.append(input, body);
       list.append(row);
@@ -155,6 +172,13 @@ export function createReview({ root, result, documentId, user, options, fileName
   });
   on(root.querySelector('#prev-page'), 'click', () => page > 1 && showPage(page - 1));
   on(root.querySelector('#next-page'), 'click', () => page < result.pages.length && showPage(page + 1));
+  on(nextUnviewed, 'click', () => {
+    const order = [...pages.keys()];
+    const target = order.find(n => n > page && !reviewed.has(n)) ?? order.find(n => !reviewed.has(n));
+    if (target) showPage(target);
+  });
+  on(root.querySelector('#first-page'), 'click', () => page > 1 && showPage(1));
+  on(root.querySelector('#last-page'), 'click', () => page < result.pages.length && showPage(result.pages.length));
 
   toggle.disabled = false;
   on(toggle, 'click', () => {
@@ -206,6 +230,10 @@ export function createReview({ root, result, documentId, user, options, fileName
 
   on(approve, 'click', async () => {
     if (busy || approve.disabled) return;
+    if (reviewed.size < pages.size) {
+      const left = pages.size - reviewed.size;
+      if (!window.confirm(`Warning: you have not viewed ${left} of ${pages.size} pages. Approving now means you are redacting blindly: unseen pages may contain items you would have wanted to change.\n\nApprove anyway?`)) return;
+    }
     busy = true;
     options.setLocked(true);
     draft = undefined;
@@ -304,9 +332,8 @@ export function createReview({ root, result, documentId, user, options, fileName
   for (const f of result.findings) counts[f.type] = (counts[f.type] || 0) + 1;
   options.setCounts(counts);
   const wasEnabled = new Map(result.findings.map(f => [f.id, enabled(f)]));
-  const stopOptions = options.onChange(() => {
-    if (busy || finished || disposed) return;
-    invalidateDownload();
+  // Selections follow visibility: items that drop out are deselected, items that appear start selected.
+  function refreshVisibility() {
     for (const f of result.findings) {
       const now = enabled(f);
       if (!now) selected.delete(f.id);
@@ -316,7 +343,41 @@ export function createReview({ root, result, documentId, user, options, fileName
     paintOverlay();
     renderList();
     summary();
+  }
+  const stopOptions = options.onChange(() => {
+    if (busy || finished || disposed) return;
+    invalidateDownload();
+    refreshVisibility();
   });
+  const slider = root.querySelector('#live-sensitivity');
+  const sliderNote = root.querySelector('#live-sensitivity-note');
+  function showLevelNote() {
+    const info = SENSITIVITY_LEVELS.find(l => l.value === level);
+    const shown = result.findings.filter(enabled).length;
+    sliderNote.textContent = `${info.label}: ${info.summary} ${shown} ${shown === 1 ? 'suggestion' : 'suggestions'} at this level.`;
+  }
+  const stops = [...root.querySelectorAll('.level-stop')];
+  function syncLevelControls() {
+    slider.value = String(SENSITIVITY_LEVELS.findIndex(l => l.value === level));
+    stops.forEach(stop => { const on = stop.dataset.level === level; stop.classList.toggle('on', on); stop.setAttribute('aria-pressed', String(on)); stop.disabled = busy || finished; });
+  }
+  function setLevel(value) {
+    if (busy || finished || value === level || !SENSITIVITY_LEVELS.some(l => l.value === value)) { syncLevelControls(); return; }
+    try {
+      level = value;
+      invalidateDownload();
+      refreshVisibility();
+    } catch {
+      note.textContent = 'The sensitivity could not be changed. Please try again.';
+    }
+    syncLevelControls();
+    showLevelNote();
+  }
+  syncLevelControls();
+  showLevelNote();
+  // Both events: some browsers only fire "change" at the end of a drag.
+  for (const type of ['input', 'change']) on(slider, type, () => setLevel(SENSITIVITY_LEVELS[Number(slider.value)]?.value));
+  for (const stop of stops) on(stop, 'click', () => setLevel(stop.dataset.level));
   view.hidden = false;
   root.querySelector('.workspace-grid').classList.add('reviewing');
   root.querySelector('#discard-restart').hidden = false;

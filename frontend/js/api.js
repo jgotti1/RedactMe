@@ -28,7 +28,7 @@ async function documentRequest(id, token, options = {}, suffix = '') {
 }
 export const uploadPdf = (id, file, token, signal) => documentRequest(id, token, { method: 'POST', body: file, signal });
 export const discardPdf = (id, token, keepalive = false) => documentRequest(id, token, { method: 'DELETE', keepalive, signal: AbortSignal.timeout(10000) });
-export const scanPdf = (id, token, useAi = true, signal) => documentRequest(id, token, { method: 'POST', signal }, `/scan?use_ai=${useAi}`);
+export const scanPdf = async (id, token, terms = [], sensitivity = 'balanced', signal) => (await binaryRequest(`/api/documents/${encodeURIComponent(id)}/scan`, token, { method: 'POST', json: { terms, sensitivity }, signal })).json();
 export const getPdfStatus = (id, token) => documentRequest(id, token, { signal: AbortSignal.timeout(10000) });
 
 async function binaryRequest(path, token, options = {}) {

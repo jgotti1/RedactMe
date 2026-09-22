@@ -4,5 +4,5 @@ firebase-admin>=6.5,<8
 python-dotenv>=1.0,<2
 PyMuPDF>=1.26.7,<2
 presidio-analyzer>=2.2,<3
-openai>=1.50
 spacy>=3.7,<4
+en_core_web_md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl

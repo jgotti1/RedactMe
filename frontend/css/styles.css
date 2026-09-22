@@ -181,12 +181,6 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 #upload-progress { padding: 30px 0; }
 #remove-pdf { margin-top: 15px; }
 
-.skip-ai { display: flex; gap: .5rem; align-items: flex-start; margin: 0 0 1rem; font-size: .875rem; text-align: left; }
-.skip-ai label { display: flex; gap: .5rem; align-items: flex-start; cursor: pointer; }
-.skip-ai input { margin-top: .2rem; }
-.tip { position: relative; cursor: help; flex: none; line-height: 1.4; }
-.tip-text { display: none; position: absolute; right: 0; bottom: 140%; width: min(20rem, 80vw); padding: .75rem; border-radius: .5rem; background: #1f2937; color: #fff; font-size: .8125rem; line-height: 1.45; z-index: 10; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
-.tip:hover .tip-text, .tip:focus .tip-text, .tip:focus-within .tip-text { display: block; }
 
 .page-nav { display: inline-flex; gap: 12px; }
 .page-stage { position: relative; display: block; max-width: 100%; margin: 0 auto; width: fit-content; box-shadow: 0 2px 14px rgba(0,0,0,.15); background: #fff; }
@@ -288,3 +282,46 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 #approve-redact.approved, #approve-redact.approved:disabled { background: #9aa7a0; border-color: #9aa7a0; color: #fff; opacity: 1; cursor: not-allowed; justify-content: center; }
 @media (max-width: 1100px) { .document-area, .download-panel, .review-panel, .options-panel { zoom: 1; } }
 #approve-redact.approved { font-size: 14px; white-space: nowrap; }
+
+.terms-label { display: block; font-size: 13px; color: #2c4a3c; margin: 2px 0 6px; }
+#custom-terms { width: 100%; box-sizing: border-box; border: 1px solid #cfdcd3; border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 13px; resize: vertical; min-height: 88px; }
+#custom-terms:focus { outline: 2px solid #8fc7a5; border-color: #246a59; }
+.terms-hint { display: block; font-size: 11px; color: #7b8d80; margin-top: 5px; line-height: 1.5; }
+
+.level-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #cfdcd3; border-radius: 9px; overflow: hidden; margin: 2px 0 10px; }
+.level { position: relative; text-align: center; cursor: pointer; font-size: 14px; font-weight: 600; color: #2c4a3c; background: #fff; }
+.level + .level { border-left: 1px solid #cfdcd3; }
+.level input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+.level span { display: block; padding: 10px 4px; }
+.level.on { background: #205444; color: #fff; }
+.level:focus-within { outline: 2px solid #8fc7a5; outline-offset: -2px; }
+.sensitivity-summary { font-size: 13px; line-height: 1.55; color: #2c4a3c; margin: 0 0 6px; }
+.options-panel.locked .level, .options-panel.locked .level input { cursor: not-allowed; }
+
+.live-sensitivity { padding: 14px 20px 6px; border-bottom: 1px solid #edf1ee; }
+.live-sensitivity label strong { font-size: 13px; color: #14372a; }
+.live-slider { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; font-size: 12px; font-weight: 600; color: #4b6a5a; }
+.live-slider input[type=range] { flex: 1; accent-color: #205444; height: 22px; cursor: pointer; }
+.live-slider input[type=range]:disabled { cursor: not-allowed; opacity: .5; }
+.live-note { font-size: 12px; line-height: 1.5; color: #4b6a5a; margin: 2px 0 8px; }
+
+/* Keep the review panel and its Approve button on screen while scrolling a tall page preview. */
+.workspace-grid.reviewing .review-panel { position: sticky; top: 10px; align-self: start; max-height: calc((100vh - 20px) / 1.12); overflow-y: auto; }
+.workspace-grid.reviewing .review-actions { position: sticky; bottom: 0; background: #fff; box-shadow: 0 -6px 12px -8px rgba(0,0,0,.18); }
+@media (max-width: 1100px) { .workspace-grid.reviewing .review-panel { max-height: calc(100vh - 20px); } }
+@media (max-width: 700px) { .workspace-grid.reviewing .review-panel { position: static; max-height: none; } .workspace-grid.reviewing .review-actions { position: static; box-shadow: none; } }
+
+.live-stops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 6px; }
+.level-stop { border: 1px solid #cfdcd3; background: #fff; border-radius: 8px; padding: 8px 6px; font-size: 13px; font-weight: 600; color: #2c4a3c; cursor: pointer; }
+.level-stop.on { background: #205444; border-color: #205444; color: #fff; }
+.level-stop:disabled { opacity: .5; cursor: not-allowed; }
+#review-note.gate { background: #fff7de; border: 1px solid #e6cf85; border-radius: 8px; padding: 10px 12px; color: #5a4a1c; font-size: 12px; text-align: left; }
+
+/* Keep page navigation reachable: wrap instead of clipping, and stay visible while scrolling a tall page. */
+#review-view .sample-toolbar { flex-wrap: wrap; position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid #edf1ee; }
+#review-view .page-nav { flex-wrap: wrap; justify-content: flex-end; }
+#review-view .page-nav .text-button:disabled { color: #9aa9a0; text-decoration: none; cursor: not-allowed; }
+
+/* Yellow until every page has been viewed, then the normal green. */
+#approve-redact.partial:not(.approved):not(.working) { background: #e8b923; border-color: #c9a23a; color: #3d2f00; }
+#approve-redact.partial:not(.approved):not(.working):hover { background: #f0c63f; }

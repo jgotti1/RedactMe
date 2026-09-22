@@ -1,4 +1,4 @@
-"""Extract, classify, detect (rules + Presidio + OpenAI), merge."""
+"""Extract, classify, detect (rules + Presidio, OCR for scanned pages), merge."""
 import asyncio
 import json
 import os
@@ -6,13 +6,14 @@ import sys
 import uuid
 from pathlib import Path
 
-from . import openai_service, presidio_engine, rules
+from . import labels, presidio_engine, rules, terms as term_tools
+from .sensitivity import LEVELS
 from .models import Finding
 import shutil
 
 from .pages import build_pages, needs_ocr, rects_for
 
-SOURCE_PRIORITY = {"RULE": 3, "PRESIDIO": 2, "AI": 1}
+SOURCE_PRIORITY = {"CUSTOM": 3, "RULE": 2, "PRESIDIO": 1}
 
 
 async def _extract(data: bytes) -> dict:
@@ -49,7 +50,7 @@ def merge(pages, raw):
             else:
                 groups.append({"items": [item], "end": item[3]})
         for g in groups:
-            best = max(g["items"], key=lambda r: (SOURCE_PRIORITY[r[6]] >= 2, r[4], r[3] - r[2]))
+            best = max(g["items"], key=lambda r: (SOURCE_PRIORITY[r[6]] >= 1, r[4], r[3] - r[2]))
             page = by_page[page_no]
             text = page.text[best[2]:best[3]].strip()
             if not text:
@@ -91,18 +92,28 @@ async def _ocr(data: bytes, page_numbers: list) -> dict:
         await process.wait()
 
 
-async def scan(data: bytes, use_ai: bool = True) -> dict:
+async def scan(data: bytes, terms=(), sensitivity: str = "balanced") -> dict:
+    """Detect at every sensitivity level in one pass. Each finding records the levels that show it, so the
+    review screen can change sensitivity instantly without rescanning."""
     extracted = await _extract(data)
     pages = build_pages(extracted, await _ocr(data, needs_ocr(extracted)))
-    raw = [(*t, "RULE") for t in rules.detect(pages)]
-    raw += [(*t, "PRESIDIO") for t in await asyncio.to_thread(presidio_engine.detect, pages)]
-    ai_raw, ai_status = await openai_service.analyze(pages) if use_ai else ([], "user_skipped")
-    raw += [(*t, "AI") for t in ai_raw]
-    findings = merge(pages, raw)
+    model_results = await asyncio.to_thread(presidio_engine.analyze, pages)
+    custom = [(*t, "CUSTOM") for t in term_tools.detect_custom(pages, term_tools.clean_terms(terms))]
+    merged: dict[tuple, Finding] = {}
+    for level in LEVELS:
+        raw = [(*t, "RULE") for t in rules.detect(pages, level)]
+        raw += [(*t, "PRESIDIO") for t in presidio_engine.select(model_results, pages, level)]
+        raw = labels.filter_raw(pages, raw + custom)
+        found = merge(pages, raw)
+        found += term_tools.propagate(pages, found, level)
+        for f in found:
+            key = (f.page, f.type, f.start, f.end)
+            merged.setdefault(key, f).levels.add(level)
+    findings = sorted(merged.values(), key=lambda f: (f.page, f.start))
     unanalyzed = [p.page for p in pages if not p.analyzed]
     # A clean result may only be declared when every check ran on every page.
-    complete = not unanalyzed and ai_status in ("ok", "user_skipped")  # skipping is the user's explicit choice
-    return {"findings": findings, "ai_status": ai_status, "unanalyzed_pages": unanalyzed,
+    complete = not unanalyzed
+    return {"findings": findings, "unanalyzed_pages": unanalyzed, "sensitivity": sensitivity,
             "complete": complete,
             "pages": [{"page": p.page, "classification": p.classification, "analyzed": p.analyzed,
                        "width": e["width"], "height": e["height"]} for p, e in zip(pages, extracted["pages"])]}
