@@ -141,11 +141,14 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 .review-empty > span { font-size: 30px; color: #88a092; }
 .review-empty p { margin-bottom: 0; }
 .review-actions { border-top: 1px solid #edf1ee; padding: 16px 23px; margin-top: auto; display: flex; flex-direction: column; gap: 0; }
-.review-actions #manual-toggle { width: 100%; margin-bottom: 10px; }
-.review-actions #approve-redact { width: 100%; margin-bottom: 14px; }
-.review-actions #discard-restart { width: auto; margin-left: auto; padding: 8px 0; font-size: 12px; color: #9a7a7e; }
-.review-actions #discard-restart:hover { color: #6d5558; }
-.review-actions p { font-size: 10px; color: var(--muted); line-height: 1.7; margin: 2px 0 0; text-align: center; }
+.review-actions > *:not(p) { display: none; }
+.review-actions #approve-redact { display: block; width: 100%; margin-bottom: 12px; }
+.review-actions #manual-toggle { display: block; width: auto; margin-right: 10px; margin-bottom: 12px; }
+.review-actions #next-unviewed { display: block; width: auto; margin-bottom: 12px; }
+.review-actions > div:first-of-type { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.review-actions #discard-restart { display: block; width: auto; padding: 6px 0; font-size: 11px; color: #9a7a7e; border: 0; background: transparent; }
+.review-actions #discard-restart:hover { color: #6d5558; text-decoration: underline; }
+.review-actions p { font-size: 10px; color: var(--muted); line-height: 1.7; margin: 2px 0 0; text-align: center; display: block; }
 .download-panel { margin-top: 22px; display: flex; align-items: center; gap: 18px; padding: 22px 25px; border: 1px solid #dce6df; border-radius: 12px; background: #edf3ef; }
 .download-icon { font-size: 25px; color: #648470; }
 .download-panel h2 { font-size: 15px; margin: 0 0 7px; letter-spacing: -.2px; }
@@ -324,9 +327,9 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 #review-view .page-nav { flex-wrap: wrap; justify-content: flex-end; }
 #review-view .page-nav .text-button:disabled { color: #9aa9a0; text-decoration: none; cursor: not-allowed; }
 
-/* Yellow until every page has been viewed, then the normal green. */
-#approve-redact.partial:not(.approved):not(.working) { background: #e8b923; border-color: #c9a23a; color: #3d2f00; }
-#approve-redact.partial:not(.approved):not(.working):hover { background: #f0c63f; }
+/* Professional styling for partial approval (not all pages reviewed). */
+#approve-redact.partial:not(.approved):not(.working) { background: #205444; border-color: #205444; color: white; opacity: 0.9; }
+#approve-redact.partial:not(.approved):not(.working):hover { background: #2c6b54; opacity: 1; }
 
 /* Login splash: intro column matches the sign-in card height; the sample preview absorbs the extra depth. */
 #login-page { align-items: stretch; padding-top: 40px; padding-bottom: 40px; }
