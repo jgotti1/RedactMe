@@ -521,19 +521,20 @@ body:has(#workspace:not([hidden])) .site-header .brand-block { width: auto; max-
   .workspace-header .workspace-heading h1 { font-size: 25px; }
 }
 
-/* Place the introduction in the open header space beside the account controls. */
+/* Right-aligned header with workspace text above account controls. */
 @media (min-width: 1101px) {
   .workspace-header {
     flex: 1;
     max-width: none;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 28px;
-    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    text-align: right;
     padding-top: 10px;
   }
-  .workspace-header .workspace-heading { grid-column: 1; grid-row: 1; justify-self: center; max-width: 360px; }
-  .workspace-header .header-account { grid-column: 2; grid-row: 1; }
+  .workspace-header .workspace-heading { max-width: 420px; order: 1; }
+  .workspace-header .header-account { order: 2; gap: 10px; }
   .workspace-header .workspace-heading h1 { font-size: clamp(25px, 2vw, 32px); }
+  .workspace-header .workspace-heading .workspace-description { font-size: 13px; line-height: 1.6; color: #607675; }
 }

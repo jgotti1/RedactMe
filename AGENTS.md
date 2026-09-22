@@ -277,3 +277,10 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Centered the three workflow steps (1-2-3 status bar) horizontally on the page; step indicators and labels are centered within each column. Mobile layout also centers elements.
 - Moved workspace introduction heading from inside the content area to the header, positioned between the brand and account controls.
 - Frontend production build passed. Committed and pushed as `73b11f3` with the message "Match workspace background to splash screen and center workflow status bar."
+
+## Workspace header layout refinement — September 21, 2026
+- Reorganized the signed-in header for improved visual hierarchy and professionalism.
+- Repositioned the workspace introduction heading (DOCUMENT WORKSPACE / "A little less visible. A lot more private.") to the top-right of the header.
+- Account controls (user name and Sign out button) now stack vertically directly below the heading, maintaining right alignment.
+- All elements are right-aligned with consistent spacing; mobile layout remains responsive with centered elements.
+- Frontend production build pending. Changes ready for visual QA before publishing.
