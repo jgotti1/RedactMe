@@ -296,3 +296,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Changed: verification call now commented out in `backend/app/redaction/service.py` `redact()` function. Redactions proceed immediately after approval, no verification gate.
 - Rationale: user explicitly approves selections, app should trust their judgment and move forward with redaction without second-guessing.
 - Note: this changes the security posture; original design mandated verification fail-closed to prevent accidental incomplete redactions. User accepts this trade-off for workflow simplicity.
+
+## "Discard & start over" button visibility — September 21, 2026
+- Improved button styling in review panel: full-width button with light red background, red border, and rounded corners.
+- Button is now more prominent and easier to find when the user wants to clear the current document and restart.
+- Behavior unchanged: shows confirmation dialog, then discards document and resets workflow to step 1 (upload).
