@@ -5,31 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#102c30">
-  <title>Redact Me | Secure Document Redaction</title>
+  <title>RedactMe | Secure Document Redaction</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="/" aria-label="Redact Me home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h4M10 12h5M10 16h5" stroke="currentColor" stroke-width="2"/></svg></span><span>REDACT ME<small>DOCUMENT PRIVACY WORKSPACE</small></span></a>
+    <div class="brand-block"><a class="brand" href="/" aria-label="RedactMe home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h4M10 12h5M10 16h5" stroke="currentColor" stroke-width="2"/></svg></span><span>REDACTME<small>DOCUMENT PRIVACY WORKSPACE</small><small class="brand-sub">Secure automated document redaction</small></span></a><p class="privacy-note"><b>Keep sensitive documents out of public AI chats.</b> Review, approve, and download your redacted file—without sending it to public AI services. Working files are deleted after download, keeping the process simple and helping protect your privacy.</p></div>
     <span id="header-badge" class="badge"><span class="dot" aria-hidden="true"></span>Your privacy, first</span>
     <div id="header-account" class="header-account" hidden><span id="account"></span><button id="logout" type="button" class="secondary">Sign out</button></div>
   </header>
   <main id="login-page">
     <section class="intro">
-      <p class="eyebrow"><span class="line" aria-hidden="true"></span>YOUR INFORMATION. YOUR DECISION.</p>
       <h1>Share with confidence.<br><span>Keep what’s private.</span></h1>
       <p class="tagline">Secure Document Redaction</p>
-      <p class="description">A thoughtful way to prepare sensitive documents for sharing. Redact Me helps you find the details. You decide what stays and what goes.</p>
+      <p class="description">A thoughtful way to prepare sensitive documents for sharing. RedactMe helps you find the details. You decide what stays and what goes.</p>
       <div class="document-preview" aria-hidden="true">
-        <div class="preview-top"><span class="mini-document">▤</span><span>DOCUMENT REVIEW</span><span class="preview-label">Coming soon</span></div>
-        <div class="paper-lines"><span class="paper-line long"></span><span class="paper-line medium"></span><div class="paper-row"><span class="paper-line short"></span><span class="redaction"></span></div><div class="paper-row"><span class="redaction wide"></span><span class="paper-line short"></span></div></div>
+        <div class="preview-top"><span class="mini-document">▤</span><span>DOCUMENT REVIEW</span><span class="preview-label">You’re in control</span></div>
+        <div class="paper-lines"><span class="paper-line long"></span><span class="paper-line medium"></span><div class="paper-row"><span class="paper-line short"></span><span class="redaction"></span></div><div class="paper-row"><span class="redaction wide"></span><span class="paper-line short"></span></div><span class="paper-line long"></span><div class="paper-row"><span class="paper-line medium"></span><span class="redaction short"></span></div><span class="paper-line medium"></span><div class="paper-row"><span class="redaction"></span><span class="paper-line short"></span></div><span class="paper-line long"></span><span class="paper-line short"></span></div>
         <div class="preview-bottom"><span class="dot"></span>Human review before every redaction</div>
       </div>
       <div class="principles"><span><b>01</b>Identify</span><span><b>02</b>Review</span><span><b>03</b>Redact & verify</span></div>
     </section>
+    <div class="login-column">
     <section class="card" aria-labelledby="welcome">
       <div class="card-top"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7z" stroke="currentColor" stroke-width="1.5"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.7"/></svg></span><span class="card-kicker">YOUR WORKSPACE</span></div>
-      <h2 id="welcome">Welcome to Redact Me</h2>
+      <h2 id="welcome">Welcome to RedactMe</h2>
       <p id="card-subtitle" class="muted">Sign in to get started with your workspace.</p>
       <div id="signed-out">
         <button id="google-login" class="google-button" type="button"><svg class="google-logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6C44.4 38.03 46.98 31.87 46.98 24.55Z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.87 23.87 0 0 0 0 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>Sign in with Google<span class="button-arrow" aria-hidden="true">→</span></button>
@@ -41,13 +41,14 @@
           <p id="password-help" class="form-help" hidden>Use at least 6 characters. Follow the password requirements shown when creating your account.</p>
           <button id="email-submit" class="primary email-submit" type="submit" disabled>Sign in with email <span aria-hidden="true">→</span></button>
         </form>
-        <p class="auth-switch"><span id="switch-prompt">New to Redact Me?</span> <button id="switch-mode" class="text-button" type="button">Create an account</button></p>
+        <p class="auth-switch"><span id="switch-prompt">New to RedactMe?</span> <button id="switch-mode" class="text-button" type="button">Create an account</button></p>
         <p class="auth-note">Sign in to your document workspace.</p>
       </div>
       <p id="status" role="status" aria-live="polite" class="status">Preparing sign-in…</p>
 
       <div class="card-bottom"><span class="dot" aria-hidden="true"></span>Built around privacy and human review</div>
     </section>
+    </div>
   </main>
   <main id="workspace" class="workspace" hidden>
         <div id="verification-panel" class="verification-panel" hidden><strong>Verify your email address</strong><p id="verification-status" role="status" aria-live="polite">Check your inbox for a verification link.</p><div class="verification-actions"><button id="resend-verification" class="text-button" type="button">Send verification email</button><button id="check-verification" class="text-button" type="button">I’ve verified my email</button></div></div>

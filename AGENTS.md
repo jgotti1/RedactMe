@@ -231,3 +231,14 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - User authorized committing and pushing all current tracked changes, including the staged new detection modules. This supersedes the earlier notes to keep these changes local and uncommitted.
 - Includes removal of external AI, improved local detection and custom terms, sensitivity controls, and review/navigation refinements described above.
 - Pre-publication validation: all 69 backend tests and the frontend production build passed; staged files checked against known local secrets and credential patterns, with no matches. Private environment files, credentials and PLANNING.md remain excluded.
+
+
+## Splash screen design and privacy copy — September 21, 2026
+- User authorized committing and pushing the splash changes and accompanying RedactMe branding updates; this supersedes earlier instructions to leave this work uncommitted.
+- Enlarged the complete brand block and aligned its left edge with the privacy notice. Raised the desktop login card and aligned its right edge with the privacy badge text; smaller screens retain responsive spacing. The header badge sits at the title's top line.
+- Added a 3% darker splash background, refined card styling and document preview, and enlarged supporting labels and footer by 2 px. Privacy notice is offset down by 8 px plus 3 CSS mm.
+- Final notice: “Keep sensitive documents out of public AI chats.” Followed by: “Review, approve, and download your redacted file—without sending it to public AI services. Working files are deleted after download, keeping the process simple and helping protect your privacy.”
+- Replaced the misleading “Runs locally” preview badge with “You’re in control.” Processing uses the backend; cleanup follows download, and the browser retains the re-save copy until the user finishes. No guarantee of secure memory erasure is implied.
+- Standardized visible branding as RedactMe, including sign-in form modes, page titles and options text. Authentication and document processing behavior are unchanged.
+- Validation: frontend production build and diff whitespace check passed. Earlier desktop Chrome checks verified placement; full mobile visual QA remains pending. Backend code is unchanged.
+- Publication scope: AGENTS.md, frontend/index.html, frontend/css/styles.css, frontend/js/main.js and frontend/js/redaction-options.js. Private configuration and credentials remain excluded.

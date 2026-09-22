@@ -66,7 +66,7 @@ try {
     document.querySelector("#header-account").hidden = !user;
     document.querySelector("#header-badge").hidden = Boolean(user);
     history.replaceState(null, "", user ? "/app" : "/");
-    document.title = user ? "Workspace | Redact Me" : "Sign in | Redact Me";
+    document.title = user ? "Workspace | RedactMe" : "Sign in | RedactMe";
     verificationPanel.hidden = !user || user.emailVerified || !user.providerData.some((provider) => provider.providerId === "password");
     if (user) {
       startSessionTimers();
@@ -139,9 +139,9 @@ function setMode(next) {
   document.querySelector("#confirm-field").hidden = !signup;
   document.querySelector("#password-help").hidden = !signup;
   emailSubmit.textContent = signup ? "Create account" : reset ? "Send password reset" : "Sign in with email";
-  document.querySelector("#switch-prompt").textContent = signup ? "Already have an account?" : reset ? "Remember your password?" : "New to Redact Me?";
+  document.querySelector("#switch-prompt").textContent = signup ? "Already have an account?" : reset ? "Remember your password?" : "New to RedactMe?";
   switchMode.textContent = signup || reset ? "Back to sign in" : "Create an account";
-  document.querySelector("#welcome").textContent = signup ? "Create your account" : reset ? "Reset your password" : "Welcome to Redact Me";
+  document.querySelector("#welcome").textContent = signup ? "Create your account" : reset ? "Reset your password" : "Welcome to RedactMe";
   document.querySelector("#card-subtitle").textContent = signup ? "Start with an email address and password." : reset ? "We’ll help you get back to your workspace." : "Sign in to get started with your workspace.";
   setStatus(reset ? "Enter your account email to request a reset link." : signup ? "Firebase securely manages your account credentials." : "Sign in with Google or your email address.");
 }

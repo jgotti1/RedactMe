@@ -325,3 +325,126 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 /* Yellow until every page has been viewed, then the normal green. */
 #approve-redact.partial:not(.approved):not(.working) { background: #e8b923; border-color: #c9a23a; color: #3d2f00; }
 #approve-redact.partial:not(.approved):not(.working):hover { background: #f0c63f; }
+
+/* Login splash: intro column matches the sign-in card height; the sample preview absorbs the extra depth. */
+#login-page { align-items: stretch; padding-top: 40px; padding-bottom: 40px; }
+#login-page .intro { display: flex; flex-direction: column; }
+#login-page h1 { margin: 16px 0 12px; }
+#login-page .description { margin: 0 0 10px; }
+.privacy-note { font-size: 13px; line-height: 1.65; color: #24473e; max-width: 435px; margin: 0; padding: 10px 14px; background: #eef5f0; border-left: 3px solid #4d8a70; border-radius: 0 8px 8px 0; }
+#login-page .document-preview { flex: 1; display: flex; flex-direction: column; margin-top: 18px; max-width: 435px; }
+#login-page .paper-lines { flex: 1; align-content: space-evenly; }
+#login-page .principles { margin-top: 18px; }
+#login-page .redaction.short { width: 22%; }
+@media (max-width: 700px) { #login-page .document-preview { flex: none; } }
+#login-page .privacy-note { margin-top: 16px; }
+#login-page h1 { margin-top: 18px; }
+
+/* Larger, bolder brand mark. */
+.brand { gap: 16px; font-size: 26px; font-weight: 850; letter-spacing: 2.5px; }
+.brand small { font-size: 10px; font-weight: 650; letter-spacing: 1.8px; margin-top: 6px; }
+.brand-icon { width: 58px; height: 62px; border-radius: 14px; }
+.brand-icon svg { width: 34px; height: 34px; stroke-width: 2; }
+@media (max-width: 700px) { .brand { font-size: 19px; letter-spacing: 1.6px; } .brand-icon { width: 46px; height: 50px; } .brand-icon svg { width: 27px; height: 27px; } }
+
+/* Brand mark at 150% of the previous size, vertically centered in the header. */
+.site-header { align-items: center; padding-top: 16px; padding-bottom: 16px; }
+.brand { gap: 24px; font-size: 39px; line-height: 1; letter-spacing: 3.5px; align-self: center; }
+.brand small { font-size: 15px; letter-spacing: 2.5px; margin-top: 9px; line-height: 1; }
+.brand-icon { width: 87px; height: 93px; border-radius: 20px; }
+.brand-icon svg { width: 51px; height: 51px; }
+@media (max-width: 700px) { .brand { font-size: 24px; gap: 14px; letter-spacing: 1.8px; } .brand small { font-size: 9px; } .brand-icon { width: 52px; height: 56px; border-radius: 12px; } .brand-icon svg { width: 30px; height: 30px; } }
+
+/* Header: fixed-height band with the brand centered exactly between top and bottom edges. */
+.site-header { box-sizing: border-box; min-height: 130px; padding-top: 0; padding-bottom: 0; align-items: center; }
+.site-header .brand { margin: 0; padding: 0; height: 100%; display: flex; align-items: center; }
+.site-header .brand > span:last-child { display: flex; flex-direction: column; justify-content: center; }
+.site-header .brand-icon { flex: none; margin: 0; }
+@media (max-width: 700px) { .site-header { min-height: 84px; } }
+
+/* Brand mark 135% larger and nudged down; header badge 175% larger. */
+.site-header { min-height: 170px; }
+.site-header .brand { font-size: 53px; gap: 32px; letter-spacing: 4.7px; position: relative; top: 10px; }
+.site-header .brand small { font-size: 20px; letter-spacing: 3.4px; margin-top: 12px; }
+.site-header .brand-icon { width: 117px; height: 126px; border-radius: 27px; }
+.site-header .brand-icon svg { width: 69px; height: 69px; }
+.site-header .badge { font-size: 19px; padding: 14px 23px; gap: 14px; border-radius: 50px; }
+.site-header .badge .dot { width: 11px; height: 11px; }
+@media (max-width: 700px) { .site-header { min-height: 96px; } .site-header .brand { font-size: 26px; gap: 14px; top: 4px; } .site-header .brand small { font-size: 9px; } .site-header .brand-icon { width: 54px; height: 58px; border-radius: 13px; } .site-header .brand-icon svg { width: 32px; height: 32px; } .site-header .badge { font-size: 12px; padding: 8px 13px; } }
+.site-header .brand small.brand-sub { font-size: 17px; font-weight: 500; letter-spacing: 1px; text-transform: none; margin-top: 8px; color: #4e6961; }
+@media (max-width: 700px) { .site-header .brand small.brand-sub { font-size: 9px; margin-top: 4px; } }
+
+/* Privacy note lives in the header, directly under the brand subtitle. */
+.brand-block { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 0; }
+.site-header { min-height: 0; }
+.site-header .brand { height: auto; top: 0; }
+.site-header .privacy-note { margin: 0; max-width: 560px; }
+@media (max-width: 700px) { .brand-block { padding: 12px 0; gap: 10px; } .site-header .privacy-note { font-size: 12px; } }
+.site-header:has(#header-account:not([hidden])) .privacy-note { display: none; }
+
+/* Tighter, more modern login layout: content slides up under a slimmer header. */
+.brand-block { padding: 10px 0; gap: 10px; }
+.site-header { padding-top: 6px; padding-bottom: 6px; }
+.site-header .privacy-note { max-width: 780px; font-size: 13px; padding: 8px 14px; background: linear-gradient(90deg, #e6f1ea, #f3f8f5); box-shadow: 0 1px 0 #d8e6dd; }
+#login-page { padding-top: 16px; padding-bottom: 28px; gap: 6%; }
+#login-page h1 { margin: 0 0 10px; font-size: clamp(40px, 4.4vw, 60px); letter-spacing: -2.6px; }
+#login-page .tagline { margin: 0 0 6px; font-size: 15px; text-transform: uppercase; letter-spacing: 1.6px; color: #3c6b56; }
+#login-page .description { margin-bottom: 4px; }
+#login-page .document-preview { margin-top: 14px; box-shadow: 0 14px 40px #24463914; border-radius: 16px; }
+#login-page .principles { margin-top: 14px; }
+#login-page .card { padding-top: 26px; border-radius: 22px; box-shadow: 0 30px 70px #234b3915, 0 2px 8px #234b3906; }
+
+/* Keep the privacy badge in the header and align the sign-in card with the intro. */
+.site-header > .badge { flex-shrink: 0; white-space: nowrap; font-size: 16px; padding: 11px 20px; gap: 10px; }
+.login-column { min-width: 0; align-self: start; }
+#login-page { align-items: start; }
+#login-page .card { padding: 28px 32px; border-radius: 18px; box-shadow: 0 16px 44px #234b3910; }
+#login-page .document-preview { flex: none; transform: none; }
+@media (max-width: 1050px) {
+  .site-header > .badge { font-size: 12px; padding: 9px 14px; }
+  .site-header .brand { font-size: 38px; gap: 20px; }
+  .site-header .brand small { font-size: 14px; letter-spacing: 2px; }
+  .site-header .brand small.brand-sub { font-size: 13px; }
+  .site-header .brand-icon { width: 82px; height: 90px; }
+}
+@media (max-width: 700px) {
+  .site-header { flex-wrap: wrap; gap: 4px; padding-bottom: 14px; }
+  .site-header .brand { font-size: 26px; gap: 14px; }
+  .site-header .brand small { font-size: 9px; }
+  .site-header .brand small.brand-sub { font-size: 9px; }
+  .site-header .brand-icon { width: 54px; height: 58px; }
+  .site-header > .badge { font-size: 11px; padding: 7px 12px; }
+  #login-page { gap: 24px; padding-top: 24px; }
+  #login-page .card { padding: 26px; }
+}
+
+/* Raise the header badge to the title and lift the desktop sign-in card by 30 mm. */
+@media (min-width: 701px) {
+  .site-header > .badge { align-self: flex-start; margin-top: 12px; }
+  .login-column { margin-top: -30mm; position: relative; }
+}
+
+@media (min-width: 1101px) {
+  /* Match the card edge to the badge text, accounting for the two container insets. */
+  .login-column { left: calc(40px + max(0px, (100vw - 1240px) / 2) - max(6vw, (100vw - 1240px) / 2) - 28px); margin-top: calc(-30mm - 21px); }
+  .site-header .brand-block { width: 780px; max-width: calc(100% - 230px); }
+  .site-header .privacy-note { max-width: 640px; }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .login-column { margin-top: -10mm; }
+}
+
+/* Darken only the signed-out splash background by three percent. */
+body:has(#login-page:not([hidden])) {
+  background: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%)), radial-gradient(ellipse at 5% 45%, #dfebe580, transparent 60%), #f5f7f6;
+}
+
+/* Slightly larger supporting text on the splash screen. */
+#login-page .preview-bottom { font-size: 12px; }
+#login-page .principles { font-size: 13px; }
+#login-page .principles b { font-size: 11px; }
+body:has(#login-page:not([hidden])) footer { font-size: 12px; }
+
+/* Align the complete splash title with the privacy notice. */
+body:has(#login-page:not([hidden])) .site-header .brand { align-self: flex-start; transform: none; }
+body:has(#login-page:not([hidden])) .site-header .privacy-note { position: relative; top: calc(8px + 3mm); }
