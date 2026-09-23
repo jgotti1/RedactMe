@@ -521,3 +521,461 @@ body:has(#workspace:not([hidden])) .site-header .brand-block { width: auto; max-
   .workspace-header .workspace-heading h1 { font-size: clamp(25px, 2vw, 32px); }
   .workspace-header .workspace-heading .workspace-description { font-size: 13px; line-height: 1.6; color: #607675; }
 }
+
+/* Signed-in workspace redesign: a compact shell around a focused document workbench. */
+body:has(#workspace:not([hidden])) {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(214, 232, 223, .48), transparent 34%),
+    #f3f6f4;
+}
+body:has(#workspace:not([hidden])) .site-header {
+  min-height: 88px;
+  padding: 14px max(32px, calc((100% - 1500px) / 2 + 32px));
+  align-items: center;
+  gap: 32px;
+  border-bottom: 1px solid #dce5e0;
+  background: rgba(249, 251, 250, .92);
+}
+body:has(#workspace:not([hidden])) .site-header .brand-block {
+  flex-shrink: 0;
+}
+body:has(#workspace:not([hidden])) .site-header .brand {
+  gap: 13px;
+  font-size: 24px;
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -.7px;
+}
+body:has(#workspace:not([hidden])) .site-header .brand-icon {
+  width: 48px;
+  height: 52px;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(21, 61, 57, .12);
+}
+body:has(#workspace:not([hidden])) .site-header .brand-icon svg {
+  width: 28px;
+  height: 28px;
+}
+body:has(#workspace:not([hidden])) .site-header .brand small {
+  margin-top: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 1.7px;
+}
+body:has(#workspace:not([hidden])) .site-header .brand small.brand-sub {
+  display: none;
+}
+body:has(#workspace:not([hidden])) .workspace-header {
+  flex: 1;
+  max-width: none;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 28px;
+  padding: 0;
+  text-align: right;
+}
+body:has(#workspace:not([hidden])) .workspace-header .workspace-heading {
+  order: 1;
+  display: block;
+  max-width: 430px;
+  min-width: 0;
+}
+body:has(#workspace:not([hidden])) .workspace-header .eyebrow {
+  margin: 0 0 5px;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+body:has(#workspace:not([hidden])) .workspace-header .workspace-heading h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 680;
+  line-height: 1.15;
+  letter-spacing: -.6px;
+}
+body:has(#workspace:not([hidden])) .workspace-header .workspace-heading h1 br {
+  display: none;
+}
+body:has(#workspace:not([hidden])) .workspace-header .workspace-heading h1 span::before {
+  content: " ";
+}
+body:has(#workspace:not([hidden])) .workspace-header .workspace-description {
+  display: none;
+}
+body:has(#workspace:not([hidden])) .workspace-header .header-account {
+  order: 2;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid #d8e2dc;
+  color: #4e655e;
+  font-size: 12px;
+}
+body:has(#workspace:not([hidden])) .workspace-header .header-account button {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 11px;
+}
+
+.workspace {
+  max-width: 1500px;
+  padding: 28px 32px 56px;
+}
+.workflow {
+  position: relative;
+  margin: 0 0 22px;
+  padding: 16px 20px;
+  gap: 0;
+  border: 1px solid #dce5e0;
+  border-radius: 15px;
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 8px 28px rgba(28, 61, 50, .045);
+}
+.workflow li {
+  min-width: 0;
+  gap: 11px;
+  justify-content: center;
+}
+.workflow li::before,
+.workflow li::after {
+  background: #d6e1db;
+}
+.workflow li > span {
+  width: 34px;
+  height: 34px;
+  border-color: #cbd8d1;
+  background: #f8faf9;
+  font-size: 11px;
+  font-weight: 700;
+}
+.workflow li[aria-current] > span {
+  box-shadow: 0 0 0 5px rgba(32, 84, 68, .09);
+}
+.workflow strong {
+  font-size: 12px;
+  letter-spacing: -.1px;
+}
+.workflow small {
+  margin-top: 3px;
+  font-size: 10px;
+}
+
+.workspace-grid {
+  grid-template-columns: 270px minmax(0, 1fr) 310px;
+  gap: 20px;
+  align-items: stretch;
+}
+.document-area,
+.review-panel,
+.options-panel {
+  zoom: 1;
+  border: 1px solid #dce5e0;
+  border-radius: 16px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 14px 42px rgba(27, 58, 48, .065);
+}
+.document-area {
+  min-height: 650px;
+}
+.review-panel {
+  min-height: 650px;
+}
+.options-panel {
+  position: sticky;
+  top: 16px;
+  padding-bottom: 18px;
+}
+.panel-heading {
+  min-height: 78px;
+  padding: 20px 22px;
+  border-bottom-color: #e8eeea;
+}
+.panel-heading .eyebrow {
+  margin: 0 0 7px;
+  color: #71867c;
+  font-size: 8px;
+  letter-spacing: 1.35px;
+}
+.panel-heading h2,
+.options-panel .panel-heading h2 {
+  font-size: 19px;
+  font-weight: 680;
+  color: #173a35;
+}
+.workspace-label,
+.count-pill {
+  padding: 6px 9px;
+  border: 1px solid #d8e4dd;
+  border-radius: 999px;
+  background: #f3f7f4;
+  color: #587267;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.options-panel .panel-heading {
+  min-height: auto;
+  padding: 20px 20px 14px;
+}
+.options-intro {
+  margin: 0;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid #edf1ee;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.option-group {
+  margin: 0;
+  padding: 15px 20px 10px;
+}
+.option-group + .option-group {
+  border-top: 1px solid #edf1ee;
+}
+.option-group legend {
+  margin-bottom: 9px;
+  padding: 0;
+  border: 0;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .09em;
+  color: #315c4d;
+}
+.option {
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.option input {
+  width: 16px;
+  height: 16px;
+}
+.option small {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.option-count {
+  min-width: 21px;
+  font-size: 10px;
+}
+.level-row {
+  border-radius: 8px;
+}
+.level {
+  font-size: 11px;
+}
+.level span {
+  padding: 9px 3px;
+}
+.sensitivity-summary,
+.terms-label {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.terms-hint,
+.options-note {
+  font-size: 9px;
+}
+#custom-terms {
+  min-height: 78px;
+  border-radius: 9px;
+  background: #fbfcfb;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.options-actions {
+  padding: 10px 20px 0;
+}
+#options-reset {
+  font-size: 11px;
+}
+
+.upload-empty {
+  min-height: 470px;
+  margin: 24px;
+  padding: 42px 24px;
+  border: 1.5px dashed #b9cdc2;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(224, 239, 231, .75), transparent 32%),
+    #fbfcfb;
+}
+.upload-symbol {
+  width: 62px;
+  height: 64px;
+  border-radius: 17px;
+  background: #e7f2eb;
+  color: #34735d;
+  font-size: 31px;
+  box-shadow: inset 0 0 0 1px #d8e8de;
+}
+.upload-empty h3 {
+  margin-top: 22px;
+  font-size: 19px;
+  color: #193c37;
+}
+.upload-empty p {
+  font-size: 12px;
+}
+#choose-pdf,
+#start-scan {
+  min-width: 220px;
+  padding: 16px 26px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(32, 84, 68, .14);
+}
+.upload-empty .availability {
+  font-size: 9px;
+  line-height: 1.6;
+}
+.document-footnote {
+  padding: 0 25px 22px;
+  font-size: 10px;
+}
+
+.review-empty {
+  padding: 34px 24px;
+}
+.review-empty > span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eef4f0;
+  color: #638273;
+  font-size: 22px;
+}
+.review-empty h3 {
+  margin-top: 18px;
+  font-size: 15px;
+}
+.review-empty p {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.review-actions {
+  padding: 18px 20px;
+  background: #fcfdfc;
+}
+#approve-redact {
+  border-radius: 10px;
+  font-size: 13px;
+}
+#manual-toggle {
+  border-radius: 9px;
+  font-size: 11px;
+}
+.review-actions p {
+  font-size: 9px;
+}
+
+.download-panel {
+  zoom: 1;
+  margin-top: 20px;
+  padding: 20px 24px;
+  border: 1px solid #d7e4dc;
+  border-radius: 15px;
+  background: rgba(236, 244, 239, .88);
+  box-shadow: 0 10px 30px rgba(29, 62, 51, .045);
+}
+.download-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #dcebe2;
+  color: #34715b;
+  font-size: 22px;
+}
+.download-panel h2 {
+  font-size: 15px;
+}
+.download-panel p {
+  font-size: 10px;
+}
+.download-warning {
+  margin-top: 8px !important;
+  padding-top: 8px;
+}
+#download-pdf {
+  min-width: 190px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.paper-stage {
+  padding: 24px;
+  background: #edf2ef;
+}
+.live-sensitivity {
+  padding: 16px 20px 10px;
+}
+.live-stops {
+  gap: 6px;
+}
+.level-stop {
+  min-height: 38px;
+  padding: 8px 5px;
+  font-size: 11px;
+}
+.finding {
+  margin-inline: 16px;
+}
+
+@media (max-width: 1180px) {
+  .workspace { padding-inline: 24px; }
+  .workspace-grid { grid-template-columns: 240px minmax(0, 1fr) 280px; gap: 16px; }
+  .option-group { padding-inline: 16px; }
+  .options-intro { padding-inline: 16px; }
+  body:has(#workspace:not([hidden])) .workspace-header .workspace-heading { display: none; }
+}
+@media (max-width: 960px) {
+  body:has(#workspace:not([hidden])) .site-header { padding-inline: 5%; }
+  .workspace { padding: 24px 5% 48px; }
+  .workspace-grid { grid-template-columns: 230px minmax(0, 1fr); }
+  .review-panel { grid-column: 2; min-height: 0; }
+  .options-panel { grid-row: span 2; }
+  .workspace-grid.reviewing .document-area { grid-column: 1 / -1; }
+  .workspace-grid.reviewing .review-panel { grid-column: 1 / -1; position: static; max-height: none; }
+  .download-panel { flex-wrap: wrap; }
+  #download-pdf { width: 100%; margin-left: 0; }
+}
+@media (max-width: 700px) {
+  body:has(#workspace:not([hidden])) .site-header {
+    min-height: 74px;
+    padding: 12px 6%;
+    flex-wrap: nowrap;
+  }
+  body:has(#workspace:not([hidden])) .site-header .brand { gap: 10px; font-size: 19px; letter-spacing: -.5px; }
+  body:has(#workspace:not([hidden])) .site-header .brand-icon { width: 42px; height: 46px; border-radius: 12px; }
+  body:has(#workspace:not([hidden])) .site-header .brand-icon svg { width: 24px; height: 24px; }
+  body:has(#workspace:not([hidden])) .site-header .brand small { font-size: 7px; letter-spacing: 1px; }
+  body:has(#workspace:not([hidden])) .workspace-header { gap: 8px; }
+  body:has(#workspace:not([hidden])) .workspace-header .header-account { gap: 7px; padding-left: 0; border-left: 0; }
+  body:has(#workspace:not([hidden])) .workspace-header .header-account span { display: none; }
+  body:has(#workspace:not([hidden])) .workspace-header .header-account button { min-height: 36px; padding: 8px 10px; }
+  .workspace { padding: 20px 5% 40px; }
+  .workflow { padding: 14px 8px; }
+  .workflow li { gap: 0; }
+  .workflow li > div { margin-top: 7px; }
+  .workflow li > span { width: 32px; height: 32px; }
+  .workflow strong { font-size: 10px; }
+  .workspace-grid { grid-template-columns: 1fr; }
+  .options-panel,
+  .review-panel { grid-column: auto; grid-row: auto; position: static; max-height: none; }
+  .document-area { min-height: 0; }
+  .review-panel { min-height: 360px; }
+  .panel-heading { min-height: 70px; padding: 18px; }
+  .upload-empty { min-height: 400px; margin: 16px; padding: 32px 16px; }
+  #choose-pdf,
+  #start-scan { min-width: min(220px, 100%); }
+  .download-panel { padding: 18px; }
+}
