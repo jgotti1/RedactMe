@@ -16,7 +16,13 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; back
 svg { width: 25px; height: 25px; }
 .badge { display: flex; align-items: center; gap: 8px; font-size: 11px; border: 1px solid #d9e5dd; border-radius: 30px; padding: 8px 13px; color: #4e6961; }
 .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4d8a70; flex-shrink: 0; }
-main { flex: 1; display: grid; grid-template-columns: 1.2fr 1fr; gap: 9%; align-items: center; max-width: 1240px; width: 100%; padding: 66px 40px; margin: auto; }
+main { flex: 1; display: grid; grid-template-columns: 1fr 1.2fr; gap: 9%; align-items: center; max-width: 1240px; width: 100%; padding: 66px 40px; margin: auto; }
+/* Grid/flex items default to a content-based min-width, which can force a track wider than the
+   viewport when a child (e.g. a nowrap button or long word) doesn't shrink on its own. */
+main > * { min-width: 0; }
+/* Sign-in card on the left, intro/marketing content on the right. */
+#login-page .intro { order: 2; }
+#login-page .login-column { order: 1; }
 .eyebrow { font-size: 10px; letter-spacing: 1.6px; font-weight: 650; color: #526c63; }
 .intro > .eyebrow { display: flex; align-items: center; gap: 10px; }
 .line { height: 1px; width: 24px; background: #608973; }
@@ -50,15 +56,17 @@ button:focus-visible, a:focus-visible { outline: 3px solid #74a98c; outline-offs
 .google-button:hover { background: #f4f8f5; border-color: #86a392; }
 .google-logo { width: 20px; height: 20px; flex-shrink: 0; }
 .button-arrow { margin-left: auto; color: #789180; font-size: 18px; }
-.auth-note { font-size: 10px; text-align: center; margin: 12px 0 0; }
-.status { min-height: 42px; margin: 19px 0; padding-left: 10px; border-left: 2px solid #dce7df; }
-.status.error { color: #a03339; border-color: #dfa2a4; }
+/* Auth-note and status both say similar things ("sign in with X"); style them as one quiet
+   helper line stacked closely, instead of a note plus a bordered callout box below it. */
+.auth-note { font-size: 10px; text-align: center; margin: 14px 0 0; }
+.status { min-height: 16px; margin: 4px 0 0; padding: 0; border: 0; text-align: center; font-size: 10px; }
+.status.error { color: #a03339; }
 .preview-note { background: #f5f8f6; border: 1px solid #e6ede7; border-radius: 8px; padding: 15px; color: #6e7f73; font-size: 11px; line-height: 1.8; }
 .note-title { display: flex; align-items: center; gap: 8px; color: #455f51; }
 .note-title strong { font-weight: 600; font-size: 11px; }
 .note-icon { display: grid; place-items: center; width: 15px; height: 15px; border: 1px solid #94ab99; border-radius: 50%; font-size: 10px; }
 .preview-note p { margin: 7px 0 0; }
-.card-bottom { font-size: 9px; color: #728778; display: flex; align-items: center; justify-content: center; gap: 7px; padding-top: 22px; }
+.card-bottom { font-size: 9px; color: #728778; display: flex; align-items: center; justify-content: center; gap: 7px; padding-top: 14px; margin-top: 14px; border-top: 1px solid #edf2ef; }
 .account-row { display: flex; align-items: center; gap: 11px; padding: 20px 0 5px; }
 .avatar { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #edf4ee; color: #3a7157; font-size: 13px; flex-shrink: 0; }
 .account-label { font-size: 8px; color: #7b9081; letter-spacing: 1.5px; }
@@ -401,12 +409,17 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 #login-page .principles { margin-top: 14px; }
 #login-page .card { padding-top: 26px; border-radius: 22px; box-shadow: 0 30px 70px #234b3915, 0 2px 8px #234b3906; }
 
-/* Keep the privacy badge in the header and align the sign-in card with the intro. */
+/* Keep the privacy badge in the header; sit the card lower and larger than the intro text, which
+   stays pinned near the top, right under the badge. */
 .site-header > .badge { flex-shrink: 0; white-space: nowrap; font-size: 16px; padding: 11px 20px; gap: 10px; }
 .login-column { min-width: 0; align-self: start; }
 #login-page { align-items: start; }
-#login-page .card { padding: 28px 32px; border-radius: 18px; box-shadow: 0 16px 44px #234b3910; }
+#login-page .card { padding: 40px 44px; border-radius: 18px; box-shadow: 0 16px 44px #234b3910; }
 #login-page .document-preview { flex: none; transform: none; }
+@media (min-width: 701px) {
+  .login-column { margin-top: 56px; }
+  #login-page .intro { padding-top: 6px; }
+}
 @media (max-width: 1050px) {
   .site-header > .badge { font-size: 12px; padding: 9px 14px; }
   .site-header .brand { font-size: 38px; gap: 20px; }
@@ -421,19 +434,23 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
   .site-header .brand small.brand-sub { font-size: 9px; }
   .site-header .brand-icon { width: 54px; height: 58px; }
   .site-header > .badge { font-size: 11px; padding: 7px 12px; }
+  /* Flex items default to a content-based min-width, which stops a long paragraph from
+     wrapping and pushes the header wider than the viewport. Let it shrink, then cap its width. */
+  .site-header { flex-wrap: wrap; min-width: 0; }
+  .brand-block { min-width: 0; }
+  .site-header .privacy-note { max-width: 100%; box-sizing: border-box; }
   #login-page { gap: 24px; padding-top: 24px; }
   #login-page .card { padding: 26px; }
 }
 
-/* Raise the header badge to the title and lift the desktop sign-in card by 30 mm. */
+/* Raise the header badge to the title. The card no longer needs a lift: it now sits under the
+   brand logo on the left, where the old -30mm hack (tuned for the mostly-empty right side) would
+   overlap it. */
 @media (min-width: 701px) {
   .site-header > .badge { align-self: flex-start; margin-top: 12px; }
-  .login-column { margin-top: -30mm; position: relative; }
 }
 
 @media (min-width: 1101px) {
-  /* Match the card edge to the badge text, accounting for the two container insets. */
-  .login-column { left: calc(40px + max(0px, (100vw - 1240px) / 2) - max(6vw, (100vw - 1240px) / 2) - 28px); margin-top: calc(-30mm - 21px); }
   .site-header .brand-block { width: 780px; max-width: calc(100% - 230px); }
   .site-header .privacy-note { max-width: 640px; }
 }
