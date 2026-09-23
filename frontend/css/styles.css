@@ -948,6 +948,113 @@ body:has(#workspace:not([hidden])) .workspace-header .header-account button {
   .download-panel { flex-wrap: wrap; }
   #download-pdf { width: 100%; margin-left: 0; }
 }
+
+/* Explicit, accessible decision point when verification finds intentionally retained data. */
+.verification-dialog {
+  width: min(456px, calc(100vw - 28px));
+  max-width: none;
+  padding: 0;
+  border: 3px solid #91a79c;
+  border-radius: 16px;
+  color: #17362f;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(18, 48, 40, .28), 0 2px 8px rgba(18, 48, 40, .12);
+}
+.verification-dialog::backdrop {
+  background: rgba(12, 31, 27, .58);
+  backdrop-filter: blur(3px);
+}
+.verification-dialog-shell {
+  --verification-dialog-padding: 22px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  column-gap: 13px;
+  padding: var(--verification-dialog-padding);
+}
+.verification-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  color: #7a5311;
+  background: #fff3d7;
+  border: 1px solid #eed69f;
+  font-size: 18px;
+  font-weight: 750;
+}
+.verification-dialog-heading { align-self: center; }
+.verification-dialog-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #80601d;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.verification-dialog h2 {
+  margin: 0;
+  color: #17362f;
+  font-size: 19px;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.verification-dialog-detail {
+  grid-column: 2;
+  width: fit-content;
+  margin: 17px 0 8px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  color: #6d501c;
+  background: #fff8e8;
+  font-size: 11px;
+  font-weight: 650;
+}
+.verification-dialog-message,
+.verification-dialog-guidance {
+  grid-column: 2;
+  margin: 0;
+  color: #445d56;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.verification-dialog-guidance {
+  margin-top: 8px;
+  color: #61746e;
+  font-size: 12px;
+}
+.verification-dialog-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 19px calc(var(--verification-dialog-padding) * -1) calc(var(--verification-dialog-padding) * -1);
+  padding: 15px var(--verification-dialog-padding) 17px;
+  border-top: 1px solid #dce7e1;
+  border-radius: 0 0 14px 14px;
+  background: #f2f7f4;
+}
+.verification-dialog-actions button {
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: 0;
+  min-height: 42px;
+  padding: 11px 13px;
+}
+
+@media (max-width: 520px) {
+  .verification-dialog-shell { --verification-dialog-padding: 18px; }
+  .verification-dialog h2 { font-size: 18px; }
+  .verification-dialog-detail,
+  .verification-dialog-message,
+  .verification-dialog-guidance { grid-column: 1 / -1; }
+  .verification-dialog-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.16fr);
+  }
+  .verification-dialog-actions button { width: auto; white-space: normal; }
+}
 @media (max-width: 700px) {
   body:has(#workspace:not([hidden])) .site-header {
     min-height: 74px;

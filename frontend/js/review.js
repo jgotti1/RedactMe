@@ -5,6 +5,84 @@ import { SENSITIVITY_LEVELS } from './redaction-options.js';
 const SOURCE_LABELS = { RULE: 'Pattern check', PRESIDIO: 'Name/entity model', CUSTOM: 'Your term', REPEAT: 'Repeat of a found value' };
 const TYPE_LABELS = { CUSTOM: 'Custom term', SSN: 'Social Security number', EIN: 'Employer ID number', BANK_ACCOUNT: 'Bank account', BANK_ROUTING: 'Bank routing number', CREDIT_CARD: 'Card number', EMAIL: 'Email address', PHONE: 'Phone number', ADDRESS: 'Address', PERSON_NAME: 'Person name', DATE_OF_BIRTH: 'Date of birth', ID_NUMBER: 'ID number' };
 
+// A security decision should never be hidden behind an ambiguous OK/Cancel prompt.
+export function confirmRetainedWarning(error) {
+  return new Promise(resolve => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'verification-dialog';
+    dialog.setAttribute('aria-labelledby', 'verification-dialog-title');
+    dialog.setAttribute('aria-describedby', 'verification-dialog-message');
+
+    const shell = document.createElement('div');
+    shell.className = 'verification-dialog-shell';
+
+    const icon = document.createElement('span');
+    icon.className = 'verification-dialog-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '!';
+
+    const heading = document.createElement('div');
+    heading.className = 'verification-dialog-heading';
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'verification-dialog-eyebrow';
+    eyebrow.textContent = 'Review required';
+    const title = document.createElement('h2');
+    title.id = 'verification-dialog-title';
+    title.textContent = 'Sensitive data is still visible';
+    heading.append(eyebrow, title);
+
+    const message = document.createElement('p');
+    message.id = 'verification-dialog-message';
+    message.className = 'verification-dialog-message';
+    message.textContent = error.message;
+
+    const detail = document.createElement('p');
+    detail.className = 'verification-dialog-detail';
+    const category = TYPE_LABELS[error.category] || 'Sensitive data';
+    detail.textContent = `Page ${error.page} · ${category}`;
+
+    const guidance = document.createElement('p');
+    guidance.className = 'verification-dialog-guidance';
+    guidance.textContent = 'Keep it visible only if this is intentional. All selected redaction areas will still undergo the required verification checks.';
+
+    const actions = document.createElement('div');
+    actions.className = 'verification-dialog-actions';
+    const returnButton = document.createElement('button');
+    returnButton.type = 'button';
+    returnButton.className = 'secondary';
+    returnButton.textContent = 'Return to review';
+    const continueButton = document.createElement('button');
+    continueButton.type = 'button';
+    continueButton.className = 'primary';
+    continueButton.textContent = 'Keep visible & continue';
+    actions.append(returnButton, continueButton);
+
+    shell.append(icon, heading, detail, message, guidance, actions);
+    dialog.append(shell);
+    document.body.append(dialog);
+
+    let settled = false;
+    const finish = keepVisible => {
+      if (settled) return;
+      settled = true;
+      dialog.close();
+      dialog.remove();
+      resolve(keepVisible);
+    };
+    returnButton.addEventListener('click', () => finish(false));
+    continueButton.addEventListener('click', () => finish(true));
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      finish(false);
+    });
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) finish(false);
+    });
+    dialog.showModal();
+    returnButton.focus();
+  });
+}
+
 // Review, manual redaction, approval and download for one scanned document.
 export function createReview({ root, result, documentId, user, options, fileName = '', onFinished }) {
   const base = fileName.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').trim().slice(0, 120) || 'document';
@@ -255,18 +333,38 @@ export function createReview({ root, result, documentId, user, options, fileName
     note.removeAttribute('role');
     let failure = '';
     try {
-      const outcome = await redactPdf(documentId, {
+      const request = {
         finding_ids: [...selected].filter(id => result.findings.some(f => f.id === id && enabled(f))),
         manual: manual.map(m => ({ page: m.page, rect: m.rect })),
-      }, await user.getIdToken());
+      };
+      let outcome;
+      while (!outcome) {
+        try {
+          outcome = await redactPdf(documentId, request, await user.getIdToken());
+        } catch (error) {
+          if (error.code !== 'RETAIN_CONFIRMATION_REQUIRED' || !error.warningToken) throw error;
+          banner.classList.add('error');
+          banner.textContent = error.message;
+          const keep = await confirmRetainedWarning(error);
+          if (!keep) throw new Error(`${error.message} No file was released. Review page ${error.page} and change the selection or add a manual redaction.`);
+          request.retain_warning_token = error.warningToken;
+          banner.classList.remove('error');
+          banner.textContent = `Keeping the acknowledged occurrence visible on page ${error.page}. Re-running all required verification checks…`;
+        }
+      }
       if (disposed) return;
-      if (outcome.status !== 'VERIFIED') throw new Error('Verification did not finish. Download remains blocked.');
-      banner.textContent = `Verified. ${outcome.redaction_count} ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed and the new PDF passed verification. Download it below; it can be downloaded once.`;
-      downloadNote.textContent = 'Verified redacted PDF is ready. The download is available once and then the temporary copy is deleted.';
+      if (!['VERIFIED', 'VERIFIED_WITH_RETAINED_DATA'].includes(outcome.status)) throw new Error('Verification did not finish. Download remains blocked.');
+      const retained = outcome.retained_warning_count || 0;
+      banner.textContent = retained
+        ? `Verified with your choice to keep ${retained} sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} visible. ${outcome.redaction_count} selected ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed. Download it below; it can be downloaded once.`
+        : `Verified. ${outcome.redaction_count} ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed and the new PDF passed verification. Download it below; it can be downloaded once.`;
+      downloadNote.textContent = retained
+        ? `Verified redacted PDF is ready with ${retained} acknowledged sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} left visible. The download is available once.`
+        : 'Verified redacted PDF is ready. The download is available once and then the temporary copy is deleted.';
       approved = true;
       download.disabled = false;
       download.classList.replace('secondary', 'primary');
-      setWorkflow(root, 3, { sub: 'Verified. Ready to download' });
+      setWorkflow(root, 3, { sub: retained ? 'Verified with retained data' : 'Verified. Ready to download' });
       const panel = download.closest('.download-panel');
       panel.classList.add('ready');
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });

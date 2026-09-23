@@ -14,6 +14,7 @@ if __name__ == "__main__":
         pymupdf.TOOLS.mupdf_display_errors(False)
         regions = json.loads(sys.argv[1])
         lowest = 1.0
+        lowest_page = None
         with pymupdf.open(stream=sys.stdin.buffer.read(), filetype="pdf") as doc:
             for number, rects in regions.items():
                 page = doc[int(number) - 1]
@@ -30,7 +31,9 @@ if __name__ == "__main__":
                         row = samples[y * pix.stride + max(ix0, 0): y * pix.stride + min(ix1, pix.width)]
                         total += len(row)
                         dark += sum(1 for v in row if v < 40)
-                    lowest = min(lowest, dark / total if total else 0.0)
-        sys.stdout.write(json.dumps({"min_dark": lowest}))
+                    fraction = dark / total if total else 0.0
+                    if fraction < lowest:
+                        lowest, lowest_page = fraction, int(number)
+        sys.stdout.write(json.dumps({"min_dark": lowest, "page": lowest_page}))
     except Exception:
         sys.exit(1)

@@ -123,6 +123,36 @@ def test_scan_unknown_or_other_users_document_is_404(monkeypatch):
 
 
 # ---- redaction, verification and download ----
+def test_verification_value_matching_respects_boundaries_and_formatting():
+    from app.redaction import service
+
+    assert service._value_count("SSN 123-45-6789", "123456789") == 1
+    assert service._value_count("SSN cells: 123 45\n6789", "123-45-6789") == 1
+    assert service._value_count("Account 91234567890", "123456789") == 0
+    assert service._value_count("Fields 123 / unrelated words / 45 / 6789", "123-45-6789") == 0
+
+
+def test_verification_allows_an_intentionally_unselected_duplicate():
+    import io
+    import pymupdf
+    from reportlab.pdfgen import canvas
+    from app.redaction import service
+
+    buffer = io.BytesIO()
+    document = canvas.Canvas(buffer)
+    document.drawString(60, 740, "Social Security number: 123-45-6789")
+    document.drawString(60, 700, "Social Security number on retained copy: 123-45-6789")
+    document.save()
+    data = buffer.getvalue()
+    scanned = asyncio.run(pipeline.scan(data))
+    matches = [f for f in scanned["findings"] if f.type == "SSN" and service.norm(f.text) == "123456789"]
+    assert len(matches) == 2
+
+    output, _ = asyncio.run(service.redact(data, scanned, 1, [matches[0].id], []))
+    with pymupdf.open(stream=output, filetype="pdf") as redacted:
+        assert redacted[0].get_text().count("123-45-6789") == 1
+
+
 def _scan_and_ids(client, doc_id, name="sample_tax_return.pdf"):
     assert client.post(f"/api/documents/{doc_id}", headers=HEADERS, content=(FIX / name).read_bytes()).status_code == 201
     res = client.post(f"/api/documents/{doc_id}/scan", headers={"Authorization": "Bearer x"})
@@ -169,15 +199,50 @@ def test_redact_rejects_bad_input_and_unauthenticated():
 def test_failed_verification_blocks_download(monkeypatch):
     from app.redaction import service
     async def bad_verify(*a, **k):
-        raise service.RedactionError("approved value still present")
+        raise service.RedactionError("approved value still present", page=2, category="BANK_ACCOUNT",
+                                     retain_key="synthetickey")
     monkeypatch.setattr(service, "verify", bad_verify)
     with TestClient(app) as client:
         doc_id = str(uuid4())
         data = _scan_and_ids(client, doc_id)
         auth = {"Authorization": "Bearer x"}
         res = client.post(f"/api/documents/{doc_id}/redact", headers=auth, json={"finding_ids": [data["findings"][0]["id"]]})
-        assert res.status_code == 422
+        assert res.status_code == 409
+        assert res.json()["code"] == "RETAIN_CONFIRMATION_REQUIRED"
+        assert "bank account number" in res.json()["detail"]
+        assert "page 2" in res.json()["detail"]
+        assert "123-45-6789" not in res.text
         assert client.get(f"/api/documents/{doc_id}/download", headers=auth).status_code == 409
+
+
+def test_user_can_explicitly_retain_a_warned_occurrence(monkeypatch):
+    from app.redaction import service
+    retain_key = (2, "BANK_ACCOUNT", "synthetickey")
+
+    async def warn_until_retained(*args):
+        retained = args[-1]
+        if retained.get(retain_key, 0) < 1:
+            raise service.RedactionError("approved value still present", page=2, category="BANK_ACCOUNT",
+                                         retain_key=retain_key[2])
+
+    monkeypatch.setattr(service, "verify", warn_until_retained)
+    with TestClient(app) as client:
+        doc_id = str(uuid4())
+        data = _scan_and_ids(client, doc_id)
+        auth = {"Authorization": "Bearer x"}
+        body = {"finding_ids": [data["findings"][0]["id"]]}
+        warning = client.post(f"/api/documents/{doc_id}/redact", headers=auth, json=body)
+        assert warning.status_code == 409
+        invalid = client.post(f"/api/documents/{doc_id}/redact", headers=auth,
+                              json={**body, "retain_warning_token": "not-the-issued-token"})
+        assert invalid.status_code == 422
+        assert client.get(f"/api/documents/{doc_id}/download", headers=auth).status_code == 409
+        body["retain_warning_token"] = warning.json()["warning_token"]
+        accepted = client.post(f"/api/documents/{doc_id}/redact", headers=auth, json=body)
+        assert accepted.status_code == 200, accepted.text
+        assert accepted.json()["status"] == "VERIFIED_WITH_RETAINED_DATA"
+        assert accepted.json()["retained_warning_count"] == 1
+        assert client.get(f"/api/documents/{doc_id}/download", headers=auth).status_code == 200
 
 
 def test_preview_and_isolation(monkeypatch):

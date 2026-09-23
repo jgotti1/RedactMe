@@ -24,12 +24,18 @@ class Document:
     scanning: bool = False
     output: bytes | None = None
     redacting: bool = False
+    verification_plan: str | None = None
+    retained_warnings: dict = field(default_factory=dict)
+    pending_warning: tuple | None = None
 
     def discard(self):
         # Release our buffer; Python/OS copies are not guaranteed secure erasure.
         self.data.clear()
         self.scan = None
         self.output = None
+        self.verification_plan = None
+        self.retained_warnings.clear()
+        self.pending_warning = None
 
     def summary(self):
         return {"document_id": self.document_id, "status": "VALIDATED",

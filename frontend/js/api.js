@@ -35,7 +35,12 @@ async function binaryRequest(path, token, options = {}) {
   const response = await fetch(`${apiBase}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, ...(options.json ? { 'Content-Type': 'application/json' } : {}) }, body: options.json ? JSON.stringify(options.json) : undefined, cache: 'no-store' });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(typeof payload.detail === 'string' ? payload.detail : 'The request failed. Please try again.');
+    const error = new Error(typeof payload.detail === 'string' ? payload.detail : 'The request failed. Please try again.');
+    error.code = payload.code;
+    error.warningToken = payload.warning_token;
+    error.page = payload.page;
+    error.category = payload.category;
+    throw error;
   }
   return response;
 }

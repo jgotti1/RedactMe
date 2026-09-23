@@ -18,9 +18,35 @@ TEXT_CHECKED = {"SSN", "EIN", "BANK_ACCOUNT", "BANK_ROUTING", "CREDIT_CARD", "EM
 class RedactionError(Exception):
     """Raised without content; safe to summarize to the user."""
 
+    def __init__(self, message: str = "", *, page: int | None = None, category: str | None = None,
+                 retain_key: str | None = None):
+        super().__init__(message)
+        self.page = page
+        self.category = category
+        self.retain_key = retain_key
+
 
 def norm(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", value).lower()
+
+
+def _value_pattern(value: str) -> re.Pattern | None:
+    """Match one value with flexible formatting, without joining unrelated page content.
+
+    Detected values may contain spaces, punctuation or line breaks (for example an SSN split into
+    form cells). Allow a small separator between its alphanumeric characters, but require real
+    boundaries so a short account number cannot match inside a longer number.
+    """
+    compact = norm(value)
+    if not compact:
+        return None
+    separated = r"[^A-Za-z0-9]{0,3}".join(re.escape(char) for char in compact)
+    return re.compile(rf"(?<![A-Za-z0-9]){separated}(?![A-Za-z0-9])", re.IGNORECASE)
+
+
+def _value_count(text: str, value: str) -> int:
+    pattern = _value_pattern(value)
+    return len(pattern.findall(text)) if pattern else 0
 
 
 async def _run(script: str, args: list, stdin: bytes, timeout: int) -> bytes:
@@ -68,13 +94,12 @@ def build_plan(scan: dict, page_count: int, finding_ids, manual):
     return rects, approved
 
 
-async def redact(data: bytes, scan: dict, page_count: int, finding_ids, manual):
+async def redact(data: bytes, scan: dict, page_count: int, finding_ids, manual, retained=None):
     rects, approved = build_plan(scan, page_count, finding_ids, manual)
     rebuild = [p["page"] for p in scan["pages"] if p["classification"] in ("SCANNED_IMAGE", "MIXED")]
     header = json.dumps({"rects": {str(k): v for k, v in rects.items()}, "rebuild_pages": rebuild}).encode()
     output = await _run(Path(__file__).with_name("redactor.py"), [], struct.pack(">Q", len(header)) + header + data, 120)
-    # Verification disabled per user request; trust approved selections
-    # await verify(output, scan, page_count, rects, approved)
+    await verify(output, scan, page_count, rects, approved, retained or {})
     return output, sum(len(v) for v in rects.values())
 
 
@@ -86,8 +111,9 @@ def _overlaps(span, rect) -> bool:
     return rect[0] <= cx <= rect[2] and rect[1] <= cy <= rect[3]
 
 
-async def verify(output: bytes, scan: dict, page_count: int, rects: dict, approved):
+async def verify(output: bytes, scan: dict, page_count: int, rects: dict, approved, retained=None):
     """Re-read the output (re-OCR where needed). Anything uncertain raises, blocking download."""
+    retained = retained or {}
     try:
         extracted = await pipeline._extract(output)
         pages = build_pages(extracted, await pipeline._ocr(output, needs_ocr(extracted)))
@@ -105,7 +131,7 @@ async def verify(output: bytes, scan: dict, page_count: int, rects: dict, approv
             continue  # OCR misreads solid black bars as text; these pages are verified by pixels below
         page = by_page[number]
         if any(_overlaps(span, r) for span in page.spans for r in page_rects):
-            raise RedactionError("redacted area still contains content")
+            raise RedactionError("redacted area still contains content", page=number)
     regions = {str(n): r for n, r in rects.items() if n in pixel_pages}
     if regions:
         try:
@@ -113,13 +139,23 @@ async def verify(output: bytes, scan: dict, page_count: int, rects: dict, approv
         except Exception:
             raise RedactionError("pixel verification unavailable") from None
         if result.get("min_dark", 0) < 0.98:
-            raise RedactionError("redacted pixels not fully removed")
+            raise RedactionError("redacted pixels not fully removed", page=result.get("page"))
     approved_ids = {f.id for f in approved}
-    remaining_ok: dict[str, int] = {}
+    remaining_ok: dict[tuple[int, str], int] = {}
     for f in scan["findings"]:
         if f.id not in approved_ids and f.type in TEXT_CHECKED:
-            remaining_ok[norm(f.text)] = remaining_ok.get(norm(f.text), 0) + 1
-    haystacks = [norm(p.text) for p in pages]
-    for value in {norm(f.text) for f in approved if f.type in TEXT_CHECKED and norm(f.text)}:
-        if sum(h.count(value) for h in haystacks) > remaining_ok.get(value, 0):
-            raise RedactionError("approved value still present")
+            key = (f.page, norm(f.text))
+            remaining_ok[key] = remaining_ok.get(key, 0) + 1
+
+    # Re-check distinctive approved values on every page. Counting is page-scoped and uses real
+    # boundaries: the old whole-page normalization could concatenate neighboring text into a
+    # sensitive-looking value and report a false positive with no usable location.
+    approved_values = {norm(f.text): (f.text, f.type) for f in approved
+                       if f.type in TEXT_CHECKED and norm(f.text)}
+    for compact, (value, category) in approved_values.items():
+        for page in pages:
+            allowed = remaining_ok.get((page.page, compact), 0)
+            allowed += retained.get((page.page, category, compact), 0)
+            if _value_count(page.text, value) > allowed:
+                raise RedactionError("approved value still present", page=page.page, category=category,
+                                     retain_key=compact)

@@ -5,9 +5,10 @@ import os
 from pathlib import Path
 import sys
 from typing import Annotated, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTask
 from pydantic import BaseModel, Field
 from app.redaction import service as redaction
@@ -162,6 +163,7 @@ class ManualArea(BaseModel):
 class RedactRequest(BaseModel):
     finding_ids: list[str] = Field(default_factory=list, max_length=2000)
     manual: list[ManualArea] = Field(default_factory=list, max_length=200)
+    retain_warning_token: str | None = Field(default=None, max_length=64)
 
 
 def _owned(document_id: UUID, user: dict):
@@ -193,10 +195,23 @@ async def redact_pdf(document_id: UUID, body: RedactRequest, user: Annotated[dic
         raise HTTPException(409, "Redaction is already running for this document.")
     item.redacting = True
     item.output = None
+    plan = json.dumps(body.model_dump(exclude={"retain_warning_token"}), sort_keys=True, separators=(",", ":"))
+    if item.verification_plan != plan:
+        item.verification_plan = plan
+        item.retained_warnings.clear()
+        item.pending_warning = None
+    if body.retain_warning_token:
+        pending = item.pending_warning
+        if not pending or pending[0] != body.retain_warning_token:
+            item.redacting = False
+            raise HTTPException(422, "That keep-visible confirmation is no longer valid. Review the document and try again.")
+        _, retain_key = pending
+        item.retained_warnings[retain_key] = item.retained_warnings.get(retain_key, 0) + 1
+        item.pending_warning = None
     try:
         output, count = await asyncio.wait_for(redaction.redact(
             bytes(item.data), item.scan, item.page_count, body.finding_ids,
-            [m.model_dump() for m in body.manual]), timeout=300)
+            [m.model_dump() for m in body.manual], item.retained_warnings), timeout=300)
     except redaction.RedactionError as error:
         message = str(error)
         if message in ("unknown finding", "invalid manual area", "nothing selected"):
@@ -211,6 +226,28 @@ async def redact_pdf(document_id: UUID, body: RedactRequest, user: Annotated[dic
             "approved value still present": "An approved sensitive value still appears in the output.",
         }
         reason = safe_reasons.get(message, "The output PDF could not be verified.")
+        page = getattr(error, "page", None)
+        category = getattr(error, "category", None)
+        if page and message == "approved value still present":
+            labels = {
+                "SSN": "Social Security number", "EIN": "employer identification number",
+                "BANK_ACCOUNT": "bank account number", "BANK_ROUTING": "routing number",
+                "CREDIT_CARD": "card number", "EMAIL": "email address", "PHONE": "phone number",
+                "ID_NUMBER": "ID number", "DATE_OF_BIRTH": "date of birth",
+            }
+            label = labels.get(category, "sensitive value")
+            reason = f"Sensitive data is still visible on page {page} ({label}) outside the selected redaction areas."
+            retain_key = getattr(error, "retain_key", None)
+            if retain_key:
+                token = uuid4().hex
+                item.pending_warning = (token, (page, category, retain_key))
+                return JSONResponse(status_code=409, content={
+                    "detail": reason + " Return to review to redact it, or explicitly keep this occurrence visible.",
+                    "code": "RETAIN_CONFIRMATION_REQUIRED", "warning_token": token,
+                    "page": page, "category": category,
+                })
+        elif page:
+            reason = reason.rstrip(".") + f" on page {page}."
         raise HTTPException(422, reason + " Download is blocked; nothing was released.") from None
     except Exception:
         raise HTTPException(502, "Redaction could not be completed and nothing was released. Please try again.") from None
@@ -219,7 +256,11 @@ async def redact_pdf(document_id: UUID, body: RedactRequest, user: Annotated[dic
     if store.documents.get(str(document_id)) is not item:
         raise HTTPException(409, "The upload was cancelled or expired.")
     item.output = output
-    return {"document_id": item.document_id, "status": "VERIFIED", "redaction_count": count,
+    item.pending_warning = None
+    retained_count = sum(item.retained_warnings.values())
+    return {"document_id": item.document_id,
+            "status": "VERIFIED_WITH_RETAINED_DATA" if retained_count else "VERIFIED",
+            "retained_warning_count": retained_count, "redaction_count": count,
             "size_bytes": len(output), "expires_at": item.expires_at}
 
 
