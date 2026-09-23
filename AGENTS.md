@@ -319,3 +319,8 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Reduced dead whitespace at the bottom of the card: `.card-bottom` (the "Built around privacy and human review" line) now has a subtle top border and tighter spacing instead of a large empty gap.
 - Per user's follow-up sketch: card enlarged (padding 28×32 → 40×44) and pushed down (`margin-top: 56px` on `.login-column`, `≥701px` only), while the intro/marketing text moved up to sit closer under the header badge (`padding-top: 6px` on `.intro`). Mobile (`<701px`, single-column stacked layout) is unaffected by this repositioning.
 - Validation: `npm run build` passes; layout checked at 320/375/390/480/699/700/701/1000/1101/1280px via CDP-driven screenshots, no overflow, no clipping.
+
+## Login splash redesign — September 22, 2026
+- Reworked the signed-out page into a compact product header, left-side value/privacy story and right-side authentication card. Reduced the oversized masthead, removed the warning-style privacy banner from the header, strengthened typography and spacing, and simplified the visual hierarchy while preserving all Firebase authentication controls and element IDs.
+- Added an in-context privacy assurance, clearer identify/review/redact steps and responsive styling. The illustrative document preview remains desktop-only; mobile prioritizes the product message and sign-in card.
+- Frontend production build passes. Browser QA passed at desktop and 390px mobile widths with no horizontal overflow or browser errors; login, signup and reset behavior was not changed.

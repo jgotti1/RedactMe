@@ -10,7 +10,7 @@
 </head>
 <body>
   <header class="site-header">
-    <div class="brand-block"><a class="brand" href="/" aria-label="RedactMe home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h4M10 12h5M10 16h5" stroke="currentColor" stroke-width="2"/></svg></span><span>REDACTME<small>DOCUMENT PRIVACY WORKSPACE</small><small class="brand-sub">Secure automated document redaction</small></span></a><p class="privacy-note"><b>Keep sensitive documents out of public AI chats.</b> Review, approve, and download your redacted file—without sending it to public AI services. Working files are deleted after download, keeping the process simple and helping protect your privacy.</p></div>
+    <div class="brand-block"><a class="brand" href="/" aria-label="RedactMe home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7z" stroke="currentColor" stroke-width="1.6"/><path d="M14 3v5h4M10 12h5M10 16h5" stroke="currentColor" stroke-width="2"/></svg></span><span>RedactMe<small>DOCUMENT PRIVACY WORKSPACE</small><small class="brand-sub">Secure automated document redaction</small></span></a></div>
     <span id="header-badge" class="badge"><span class="dot" aria-hidden="true"></span>Your privacy, first</span>
     <div class="workspace-header">
       <div id="header-account" class="header-account" hidden><span id="account"></span><button id="logout" type="button" class="secondary">Sign out</button></div>
@@ -19,19 +19,20 @@
   </header>
   <main id="login-page">
     <section class="intro">
+      <p class="hero-kicker"><span aria-hidden="true"></span>Private by design. Reviewed by you.</p>
       <h1>Share with confidence.<br><span>Keep what’s private.</span></h1>
-      <p class="tagline">Secure Document Redaction</p>
-      <p class="description">A thoughtful way to prepare sensitive documents for sharing. RedactMe helps you find the details. You decide what stays and what goes.</p>
+      <p class="description">Find sensitive details, review every suggestion, and create a ready-to-share redacted PDF—without giving up control of your document.</p>
+      <div class="privacy-note"><span class="privacy-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7z" stroke="currentColor" stroke-width="1.6"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.8"/></svg></span><p><b>Your document stays out of public AI chats.</b><br>Files are processed temporarily and deleted after download.</p></div>
       <div class="document-preview" aria-hidden="true">
         <div class="preview-top"><span class="mini-document">▤</span><span>DOCUMENT REVIEW</span><span class="preview-label">You’re in control</span></div>
         <div class="paper-lines"><span class="paper-line long"></span><span class="paper-line medium"></span><div class="paper-row"><span class="paper-line short"></span><span class="redaction"></span></div><div class="paper-row"><span class="redaction wide"></span><span class="paper-line short"></span></div><span class="paper-line long"></span><div class="paper-row"><span class="paper-line medium"></span><span class="redaction short"></span></div><span class="paper-line medium"></span><div class="paper-row"><span class="redaction"></span><span class="paper-line short"></span></div><span class="paper-line long"></span><span class="paper-line short"></span></div>
         <div class="preview-bottom"><span class="dot"></span>Human review before every redaction</div>
       </div>
-      <div class="principles"><span><b>01</b>Identify</span><span><b>02</b>Review</span><span><b>03</b>Redact & verify</span></div>
+      <div class="principles"><span><b>01</b>Identify details</span><span><b>02</b>Review everything</span><span><b>03</b>Redact securely</span></div>
     </section>
     <div class="login-column">
     <section class="card" aria-labelledby="welcome">
-      <div class="card-top"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7z" stroke="currentColor" stroke-width="1.5"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.7"/></svg></span><span class="card-kicker">YOUR WORKSPACE</span></div>
+      <div class="card-top"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7z" stroke="currentColor" stroke-width="1.5"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.7"/></svg></span><span class="card-kicker">SECURE SIGN IN</span></div>
       <h2 id="welcome">Welcome to RedactMe</h2>
       <p id="card-subtitle" class="muted">Sign in to get started with your workspace.</p>
       <div id="signed-out">
@@ -45,7 +46,6 @@
           <button id="email-submit" class="primary email-submit" type="submit" disabled>Sign in with email <span aria-hidden="true">→</span></button>
         </form>
         <p class="auth-switch"><span id="switch-prompt">New to RedactMe?</span> <button id="switch-mode" class="text-button" type="button">Create an account</button></p>
-        <p class="auth-note">Sign in to your document workspace.</p>
       </div>
       <p id="status" role="status" aria-live="polite" class="status">Preparing sign-in…</p>
 

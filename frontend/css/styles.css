@@ -341,137 +341,96 @@ footer a { color: #526d5d; text-underline-offset: 3px; }
 #approve-redact.partial:not(.approved):not(.working) { background: #205444; border-color: #205444; color: white; opacity: 0.9; }
 #approve-redact.partial:not(.approved):not(.working):hover { background: #2c6b54; opacity: 1; }
 
-/* Login splash: intro column matches the sign-in card height; the sample preview absorbs the extra depth. */
-#login-page { align-items: stretch; padding-top: 40px; padding-bottom: 40px; }
-#login-page .intro { display: flex; flex-direction: column; }
-#login-page h1 { margin: 16px 0 12px; }
-#login-page .description { margin: 0 0 10px; }
-.privacy-note { font-size: 13px; line-height: 1.65; color: #24473e; max-width: 435px; margin: 0; padding: 10px 14px; background: #eef5f0; border-left: 3px solid #4d8a70; border-radius: 0 8px 8px 0; }
-#login-page .document-preview { flex: 1; display: flex; flex-direction: column; margin-top: 18px; max-width: 435px; }
-#login-page .paper-lines { flex: 1; align-content: space-evenly; }
-#login-page .principles { margin-top: 18px; }
+/* Login splash: calm product story paired with a focused authentication surface. */
+body { background: #f3f6f4; }
+.brand-block { min-width: 0; }
+body:has(#login-page:not([hidden])) .site-header { min-height: 88px; padding-block: 16px; border-color: #dce5e0; background: rgba(248, 250, 249, .8); }
+body:has(#login-page:not([hidden])) .site-header .brand { gap: 14px; font-size: 24px; font-weight: 780; letter-spacing: -.7px; line-height: 1; }
+body:has(#login-page:not([hidden])) .site-header .brand > span:last-child { display: flex; flex-direction: column; }
+body:has(#login-page:not([hidden])) .site-header .brand small { margin-top: 7px; font-size: 9px; font-weight: 700; letter-spacing: 1.7px; color: #6f8078; }
+body:has(#login-page:not([hidden])) .site-header .brand-sub { display: none; }
+body:has(#login-page:not([hidden])) .site-header .brand-icon { width: 48px; height: 52px; border-radius: 14px; box-shadow: 0 6px 16px rgba(21, 61, 57, .12); }
+body:has(#login-page:not([hidden])) .site-header .brand-icon svg { width: 28px; height: 28px; }
+body:has(#login-page:not([hidden])) .site-header > .badge { flex-shrink: 0; white-space: nowrap; font-size: 12px; font-weight: 600; padding: 9px 14px; background: rgba(255,255,255,.72); }
+
+#login-page { grid-template-columns: minmax(0, 1.12fr) minmax(380px, .88fr); gap: clamp(64px, 9vw, 132px); align-items: center; max-width: 1240px; padding: 54px 40px 64px; }
+#login-page .intro { order: 1; max-width: 620px; }
+#login-page .login-column { order: 2; width: 100%; max-width: 450px; justify-self: end; }
+.hero-kicker { display: flex; align-items: center; gap: 11px; margin: 0 0 18px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #36725e; }
+.hero-kicker > span { width: 28px; height: 1px; background: #6fa089; }
+#login-page h1 { max-width: 620px; margin: 0 0 20px; font-size: clamp(48px, 5vw, 68px); font-weight: 680; line-height: 1.04; letter-spacing: -.055em; color: #17383b; }
+#login-page h1 span { color: #2b755e; }
+#login-page .description { max-width: 560px; margin: 0; font-size: 16px; line-height: 1.72; color: #5e7471; }
+#login-page .privacy-note { display: flex; align-items: center; gap: 14px; max-width: 560px; margin: 24px 0 0; padding: 14px 16px; border: 1px solid #d7e5dd; border-radius: 12px; background: rgba(255,255,255,.66); color: #48625b; }
+#login-page .privacy-note p { margin: 0; font-size: 12px; line-height: 1.6; }
+#login-page .privacy-note b { color: #234c40; }
+.privacy-icon { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 10px; background: #e4f1e9; color: #2a765e; }
+.privacy-icon svg { width: 20px; height: 20px; }
+#login-page .document-preview { max-width: 560px; margin: 24px 0 0; padding: 18px 20px; border-color: #d6e2dc; border-radius: 14px; background: rgba(255,255,255,.88); box-shadow: 0 18px 50px rgba(31, 63, 53, .09); transform: none; }
+#login-page .paper-lines { gap: 8px; padding: 14px 2px; }
 #login-page .redaction.short { width: 22%; }
-@media (max-width: 700px) { #login-page .document-preview { flex: none; } }
-#login-page .privacy-note { margin-top: 16px; }
-#login-page h1 { margin-top: 18px; }
+#login-page .preview-bottom { font-size: 11px; }
+#login-page .principles { gap: 26px; margin-top: 18px; font-size: 11px; font-weight: 600; color: #536c64; }
+#login-page .principles b { font-size: 10px; color: #3a8068; }
 
-/* Larger, bolder brand mark. */
-.brand { gap: 16px; font-size: 26px; font-weight: 850; letter-spacing: 2.5px; }
-.brand small { font-size: 10px; font-weight: 650; letter-spacing: 1.8px; margin-top: 6px; }
-.brand-icon { width: 58px; height: 62px; border-radius: 14px; }
-.brand-icon svg { width: 34px; height: 34px; stroke-width: 2; }
-@media (max-width: 700px) { .brand { font-size: 19px; letter-spacing: 1.6px; } .brand-icon { width: 46px; height: 50px; } .brand-icon svg { width: 27px; height: 27px; } }
+#login-page .card { padding: 34px 36px 28px; border-color: #dce5e0; border-radius: 20px; box-shadow: 0 30px 80px rgba(26, 56, 46, .11), 0 2px 8px rgba(26, 56, 46, .04); }
+#login-page .card-icon { width: 42px; height: 42px; border-radius: 11px; }
+#login-page .card-icon svg { width: 23px; height: 23px; }
+#login-page .card-kicker { font-size: 9px; color: #75877e; }
+#login-page h2 { margin: 24px 0 8px; font-size: 27px; }
+#login-page .muted { font-size: 12px; }
+#login-page .google-button { margin-top: 26px; }
+#login-page .field input { background: #fbfcfb; }
+#login-page .card-bottom { margin-top: 15px; padding-top: 15px; font-size: 9px; }
+#login-page .status { margin-top: 8px; }
+body:has(#login-page:not([hidden])) footer { padding-block: 18px; background: rgba(248, 250, 249, .55); font-size: 11px; }
 
-/* Brand mark at 150% of the previous size, vertically centered in the header. */
-.site-header { align-items: center; padding-top: 16px; padding-bottom: 16px; }
-.brand { gap: 24px; font-size: 39px; line-height: 1; letter-spacing: 3.5px; align-self: center; }
-.brand small { font-size: 15px; letter-spacing: 2.5px; margin-top: 9px; line-height: 1; }
-.brand-icon { width: 87px; height: 93px; border-radius: 20px; }
-.brand-icon svg { width: 51px; height: 51px; }
-@media (max-width: 700px) { .brand { font-size: 24px; gap: 14px; letter-spacing: 1.8px; } .brand small { font-size: 9px; } .brand-icon { width: 52px; height: 56px; border-radius: 12px; } .brand-icon svg { width: 30px; height: 30px; } }
-
-/* Header: fixed-height band with the brand centered exactly between top and bottom edges. */
-.site-header { box-sizing: border-box; min-height: 130px; padding-top: 0; padding-bottom: 0; align-items: center; }
-.site-header .brand { margin: 0; padding: 0; height: 100%; display: flex; align-items: center; }
-.site-header .brand > span:last-child { display: flex; flex-direction: column; justify-content: center; }
-.site-header .brand-icon { flex: none; margin: 0; }
-@media (max-width: 700px) { .site-header { min-height: 84px; } }
-
-/* Brand mark 135% larger and nudged down; header badge 175% larger. */
-.site-header { min-height: 170px; }
-.site-header .brand { font-size: 53px; gap: 32px; letter-spacing: 4.7px; position: relative; top: 10px; }
-.site-header .brand small { font-size: 20px; letter-spacing: 3.4px; margin-top: 12px; }
-.site-header .brand-icon { width: 117px; height: 126px; border-radius: 27px; }
-.site-header .brand-icon svg { width: 69px; height: 69px; }
-.site-header .badge { font-size: 19px; padding: 14px 23px; gap: 14px; border-radius: 50px; }
-.site-header .badge .dot { width: 11px; height: 11px; }
-@media (max-width: 700px) { .site-header { min-height: 96px; } .site-header .brand { font-size: 26px; gap: 14px; top: 4px; } .site-header .brand small { font-size: 9px; } .site-header .brand-icon { width: 54px; height: 58px; border-radius: 13px; } .site-header .brand-icon svg { width: 32px; height: 32px; } .site-header .badge { font-size: 12px; padding: 8px 13px; } }
-.site-header .brand small.brand-sub { font-size: 17px; font-weight: 500; letter-spacing: 1px; text-transform: none; margin-top: 8px; color: #4e6961; }
-@media (max-width: 700px) { .site-header .brand small.brand-sub { font-size: 9px; margin-top: 4px; } }
-
-/* Privacy note lives in the header, directly under the brand subtitle. */
-.brand-block { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 0; }
-.site-header { min-height: 0; }
-.site-header .brand { height: auto; top: 0; }
-.site-header .privacy-note { margin: 0; max-width: 560px; }
-@media (max-width: 700px) { .brand-block { padding: 12px 0; gap: 10px; } .site-header .privacy-note { font-size: 12px; } }
-.site-header:has(#header-account:not([hidden])) .privacy-note { display: none; }
-
-/* Tighter, more modern login layout: content slides up under a slimmer header. */
-.brand-block { padding: 10px 0; gap: 10px; }
-.site-header { padding-top: 6px; padding-bottom: 6px; }
-.site-header .privacy-note { max-width: 780px; font-size: 13px; padding: 8px 14px; background: linear-gradient(90deg, #e6f1ea, #f3f8f5); box-shadow: 0 1px 0 #d8e6dd; }
-#login-page { padding-top: 16px; padding-bottom: 28px; gap: 6%; }
-#login-page h1 { margin: 0 0 10px; font-size: clamp(40px, 4.4vw, 60px); letter-spacing: -2.6px; }
-#login-page .tagline { margin: 0 0 6px; font-size: 15px; text-transform: uppercase; letter-spacing: 1.6px; color: #3c6b56; }
-#login-page .description { margin-bottom: 4px; }
-#login-page .document-preview { margin-top: 14px; box-shadow: 0 14px 40px #24463914; border-radius: 16px; }
-#login-page .principles { margin-top: 14px; }
-#login-page .card { padding-top: 26px; border-radius: 22px; box-shadow: 0 30px 70px #234b3915, 0 2px 8px #234b3906; }
-
-/* Keep the privacy badge in the header; sit the card lower and larger than the intro text, which
-   stays pinned near the top, right under the badge. */
-.site-header > .badge { flex-shrink: 0; white-space: nowrap; font-size: 16px; padding: 11px 20px; gap: 10px; }
-.login-column { min-width: 0; align-self: start; }
-#login-page { align-items: start; }
-#login-page .card { padding: 40px 44px; border-radius: 18px; box-shadow: 0 16px 44px #234b3910; }
-#login-page .document-preview { flex: none; transform: none; }
-@media (min-width: 701px) {
-  .login-column { margin-top: 56px; }
-  #login-page .intro { padding-top: 6px; }
-}
-@media (max-width: 1050px) {
-  .site-header > .badge { font-size: 12px; padding: 9px 14px; }
-  .site-header .brand { font-size: 38px; gap: 20px; }
-  .site-header .brand small { font-size: 14px; letter-spacing: 2px; }
-  .site-header .brand small.brand-sub { font-size: 13px; }
-  .site-header .brand-icon { width: 82px; height: 90px; }
+@media (max-width: 900px) {
+  #login-page { grid-template-columns: 1fr 400px; gap: 42px; padding-inline: 5%; }
+  #login-page h1 { font-size: clamp(42px, 6vw, 56px); }
+  #login-page .document-preview { display: none; }
+  #login-page .principles { gap: 15px; }
 }
 @media (max-width: 700px) {
-  .site-header { flex-wrap: wrap; gap: 4px; padding-bottom: 14px; }
-  .site-header .brand { font-size: 26px; gap: 14px; }
-  .site-header .brand small { font-size: 9px; }
-  .site-header .brand small.brand-sub { font-size: 9px; }
-  .site-header .brand-icon { width: 54px; height: 58px; }
-  .site-header > .badge { font-size: 11px; padding: 7px 12px; }
-  /* Flex items default to a content-based min-width, which stops a long paragraph from
-     wrapping and pushes the header wider than the viewport. Let it shrink, then cap its width. */
-  .site-header { flex-wrap: wrap; min-width: 0; }
-  .brand-block { min-width: 0; }
-  .site-header .privacy-note { max-width: 100%; box-sizing: border-box; }
-  #login-page { gap: 24px; padding-top: 24px; }
-  #login-page .card { padding: 26px; }
+  body:has(#login-page:not([hidden])) .site-header { min-height: 74px; padding: 12px 6%; }
+  body:has(#login-page:not([hidden])) .site-header .brand { gap: 11px; font-size: 20px; }
+  body:has(#login-page:not([hidden])) .site-header .brand-icon { width: 42px; height: 46px; border-radius: 12px; }
+  body:has(#login-page:not([hidden])) .site-header .brand-icon svg { width: 24px; height: 24px; }
+  body:has(#login-page:not([hidden])) .site-header .brand small { margin-top: 5px; font-size: 7px; letter-spacing: 1.2px; }
+  body:has(#login-page:not([hidden])) .site-header > .badge { font-size: 10px; padding: 7px 10px; }
+  #login-page { grid-template-columns: 1fr; gap: 32px; max-width: 560px; padding: 36px 6% 48px; }
+  #login-page .intro, #login-page .login-column { width: 100%; max-width: none; }
+  #login-page h1 { font-size: clamp(40px, 12vw, 54px); }
+  #login-page .description { font-size: 14px; }
+  #login-page .privacy-note { margin-top: 20px; }
+  #login-page .principles { display: none; }
+  #login-page .card { padding: 28px 24px 24px; }
+}
+@media (max-width: 390px) {
+  body:has(#login-page:not([hidden])) .site-header > .badge { display: none; }
+  #login-page h1 { font-size: 39px; }
 }
 
-/* Raise the header badge to the title. The card no longer needs a lift: it now sits under the
-   brand logo on the left, where the old -30mm hack (tuned for the mostly-empty right side) would
-   overlap it. */
-@media (min-width: 701px) {
-  .site-header > .badge { align-self: flex-start; margin-top: 12px; }
+/* Preserve the established signed-in masthead; the redesign above is login-only. */
+body:has(#workspace:not([hidden])) .site-header .brand { gap: 32px; font-size: 53px; font-weight: 850; line-height: 1; letter-spacing: 4.7px; }
+body:has(#workspace:not([hidden])) .site-header .brand > span:last-child { display: flex; flex-direction: column; justify-content: center; }
+body:has(#workspace:not([hidden])) .site-header .brand small { margin-top: 12px; font-size: 20px; font-weight: 650; line-height: 1; letter-spacing: 3.4px; }
+body:has(#workspace:not([hidden])) .site-header .brand small.brand-sub { margin-top: 8px; font-size: 17px; font-weight: 500; letter-spacing: 1px; text-transform: none; color: #4e6961; }
+body:has(#workspace:not([hidden])) .site-header .brand-icon { flex: none; width: 117px; height: 126px; border-radius: 27px; }
+body:has(#workspace:not([hidden])) .site-header .brand-icon svg { width: 69px; height: 69px; }
+@media (max-width: 1050px) {
+  body:has(#workspace:not([hidden])) .site-header .brand { gap: 20px; font-size: 38px; }
+  body:has(#workspace:not([hidden])) .site-header .brand small { font-size: 14px; letter-spacing: 2px; }
+  body:has(#workspace:not([hidden])) .site-header .brand small.brand-sub { font-size: 13px; }
+  body:has(#workspace:not([hidden])) .site-header .brand-icon { width: 82px; height: 90px; }
 }
-
-@media (min-width: 1101px) {
-  .site-header .brand-block { width: 780px; max-width: calc(100% - 230px); }
-  .site-header .privacy-note { max-width: 640px; }
+@media (max-width: 700px) {
+  body:has(#workspace:not([hidden])) .site-header .brand { gap: 14px; font-size: 26px; letter-spacing: 1.8px; }
+  body:has(#workspace:not([hidden])) .site-header .brand small { font-size: 9px; }
+  body:has(#workspace:not([hidden])) .site-header .brand small.brand-sub { margin-top: 4px; font-size: 9px; }
+  body:has(#workspace:not([hidden])) .site-header .brand-icon { width: 54px; height: 58px; border-radius: 13px; }
+  body:has(#workspace:not([hidden])) .site-header .brand-icon svg { width: 32px; height: 32px; }
 }
-@media (min-width: 701px) and (max-width: 1100px) {
-  .login-column { margin-top: -10mm; }
-}
-
-/* Shared splash and signed-in background, three percent darker. */
-body {
-  background: linear-gradient(rgb(0 0 0 / 3%), rgb(0 0 0 / 3%)), radial-gradient(ellipse at 5% 45%, #dfebe580, transparent 60%), #f5f7f6;
-}
-
-/* Slightly larger supporting text on the splash screen. */
-#login-page .preview-bottom { font-size: 12px; }
-#login-page .principles { font-size: 13px; }
-#login-page .principles b { font-size: 11px; }
-body:has(#login-page:not([hidden])) footer { font-size: 12px; }
-
-/* Align the complete splash title with the privacy notice. */
-body:has(#login-page:not([hidden])) .site-header .brand { align-self: flex-start; transform: none; }
-body:has(#login-page:not([hidden])) .site-header .privacy-note { position: relative; top: calc(8px + 3mm); }
 
 /* Center each workflow step within its equal-width column. */
 .workflow li { justify-content: center; }
