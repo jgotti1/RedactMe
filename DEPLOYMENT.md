@@ -23,7 +23,9 @@ Variables added in the dashboard can be **staged**: they are not live until you 
 ## Bluehost subdomain
 1. Railway service, Settings, Networking, add custom domain `redactme.margotticode.com` (done via the MCP; it returns the CNAME target).
 2. Bluehost, Domains, `margotticode.com`, DNS, Add Record: **Type** CNAME, **Host** `redactme` (subdomain only), **Points to** the Railway target (currently `ogvt2y4p.up.railway.app`; re-read it from Railway if in doubt), default TTL. Remove any existing `redactme` A/CNAME record first.
-3. Wait for propagation (minutes to about an hour); Railway then issues the HTTPS certificate automatically.
+3. Also add the **TXT** ownership record Railway shows under "Show DNS records": **Host** `_railway-verify.redactme`, **Value** the full `railway-verify=...` string (copy it with the copy icon; the dialog truncates it). Without it the domain stays at "Waiting for DNS update" and no certificate is issued.
+4. Wait for propagation (minutes); Railway then issues the HTTPS certificate automatically.
+5. Add the exact hostname to Firebase Authentication, Settings, Authorized domains. Check the spelling: a typo there makes the app report an unauthorized domain.
 4. Firebase Console, Authentication, Settings, Authorized domains: add `redactme.margotticode.com` (keep the `up.railway.app` entry).
 
 ## Firebase checklist for any new hostname
