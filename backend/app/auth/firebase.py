@@ -1,4 +1,5 @@
 """Authenticate requests using Firebase, never a client-supplied UID."""
+import json
 from functools import lru_cache
 from typing import Annotated
 
@@ -8,7 +9,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from google.auth.exceptions import DefaultCredentialsError
 
-from app.config import FIREBASE_PROJECT_ID
+from app.config import FIREBASE_CREDENTIALS_JSON, FIREBASE_PROJECT_ID
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -16,8 +17,10 @@ bearer = HTTPBearer(auto_error=False)
 def firebase_app() -> firebase_admin.App:
     if not FIREBASE_PROJECT_ID:
         raise ValueError("Firebase project ID is not configured")
+    credential = (credentials.Certificate(json.loads(FIREBASE_CREDENTIALS_JSON))
+                  if FIREBASE_CREDENTIALS_JSON else credentials.ApplicationDefault())
     return firebase_admin.initialize_app(
-        credentials.ApplicationDefault(),
+        credential,
         {"projectId": FIREBASE_PROJECT_ID},
         name="redact-me-backend",
     )

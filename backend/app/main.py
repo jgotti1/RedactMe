@@ -5,12 +5,14 @@ from contextlib import asynccontextmanager, suppress
 from app.documents.routes import router as documents_router
 from app.documents.store import store
 from typing import Annotated
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.auth.firebase import require_user
-from app.config import FRONTEND_ORIGINS
+from app.config import FRONTEND_DIST, FRONTEND_ORIGINS
 
 @asynccontextmanager
 async def lifespan(app):
@@ -67,3 +69,17 @@ def health() -> dict[str, str]:
          summary="Get an authenticated greeting")
 def hello(user: Annotated[dict, Depends(require_user)]) -> Greeting:
     return Greeting(message="Hello from the backend")
+
+
+# Production: serve the built frontend from the same origin. Registered last so /api/* routes win.
+if (FRONTEND_DIST / "index.html").is_file():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def frontend(path: str):
+        if path == "api" or path.startswith("api/"):
+            raise HTTPException(404, "Not found")
+        target = (FRONTEND_DIST / path).resolve()
+        if path and target.is_file() and FRONTEND_DIST.resolve() in target.parents:
+            return FileResponse(target)
+        return FileResponse(FRONTEND_DIST / "index.html")  # SPA routes such as /app

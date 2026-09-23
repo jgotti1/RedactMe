@@ -4,6 +4,8 @@
 
 Read [PLANNING.md](PLANNING.md) before planning or implementing features. It contains the full user-provided master application specification, setup notes and approved amendments. Use it alongside this file to preserve the intended scope and requirements. Apply later explicit user instructions and approved amendments when they change an earlier requirement.
 
+Read [PHASE_2_PLANNING.md](PHASE_2_PLANNING.md) before planning or implementing administration, persistent usage tracking, account entitlements, trials, subscriptions, billing or payment-provider integration. It is a tracked, secret-free draft plan; its unresolved product decisions must be confirmed before implementation.
+
 PLANNING.md is a local, Git-ignored file containing secrets. Never print, copy, log or commit its secret values. Read the specification and setup information without exposing credentials. If the file is missing in a fresh checkout, request the specification before implementing features that depend on it.
 
 ## Stack and current scope
@@ -346,3 +348,10 @@ Never copy secrets into this tracked file. PLANNING.md is a local ignored refere
 - Frontend production build passes. Browser QA used stubbed preview, redaction and PDF responses to exercise the full verified-ready → download-started → clear-workspace sequence. It confirmed the recovery link, dialog cleanup and review reset; desktop and 390px mobile screenshots show no clipping or overflow.
 - Follow-up: removed the now-redundant full-width download footer and its dead styles/DOM dependencies. The success dialog content is centered as a balanced vertical composition. Dismissing it changes the review action to an enabled “Open verified download” button, so users can reopen the modal without re-running redaction. Browser QA verified dismiss/reopen, download, recovery and clear-workspace behavior on desktop and 390px mobile; the frontend build passes.
 - Final download confirmation now has a prominent 5px green rule plus a subtle outer ring. Its recovery notice uses clearer language and a separately displayed heading: the server copy was securely removed, the user should confirm the PDF is saved locally, “Save PDF again” is available if needed, and clearing also removes the browser-tab recovery copy.
+
+## Railway deployment prep — September 23, 2026
+- Implemented production serving: FastAPI serves `frontend/dist` (`/assets` mount plus SPA fallback for routes like `/app`, registered last so `/api/*` wins; unknown `/api/*` still 404s). `frontend/js/api.js` now uses relative same-origin paths in production builds (`import.meta.env.DEV` keeps the `127.0.0.1:8000` default for local dev).
+- Firebase credentials: optional `FIREBASE_CREDENTIALS_JSON` runtime secret (service-account JSON contents) used via `credentials.Certificate`; falls back to Application Default Credentials/`GOOGLE_APPLICATION_CREDENTIALS` locally.
+- Added multi-stage `Dockerfile` (Node build stage taking public `VITE_FIREBASE_*` build args; Python 3.12 runtime with `tesseract-ocr`, non-root user, single uvicorn worker on `$PORT`), `.dockerignore` (excludes env files, credentials, PLANNING, PDFs, tests) and `railway.json` (Dockerfile builder, `/api/health` healthcheck, one replica). Documents are in process memory, so never scale beyond one worker/replica.
+- Railway runtime variables: `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_JSON`, `FRONTEND_ORIGINS` (the Railway domain), plus build-time `VITE_FIREBASE_API_KEY/AUTH_DOMAIN/PROJECT_ID/APP_ID`. The Railway domain must be added to Firebase authorized domains.
+- Validation: frontend build and all 72 backend tests pass; TestClient confirmed `/`, `/app`, `/api/health` and unknown `/api/*` behavior. Docker image not yet built; no Railway deployment has occurred yet.

@@ -12,3 +12,6 @@ FRONTEND_ORIGINS = [origin.strip() for origin in os.getenv(
 # An empty template value should not override Application Default Credentials.
 if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip():
     os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
+# Hosted deployments have no key file: the service-account JSON is supplied as a secret runtime variable.
+FIREBASE_CREDENTIALS_JSON = os.getenv("FIREBASE_CREDENTIALS_JSON", "").strip()
+FRONTEND_DIST = ROOT / "frontend" / "dist"
