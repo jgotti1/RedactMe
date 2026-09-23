@@ -99,8 +99,6 @@ export function createReview({ root, result, documentId, user, options, fileName
   const nextUnviewed = root.querySelector('#next-unviewed');
   const list = root.querySelector('#scan-findings');
   const banner = root.querySelector('#scan-banner');
-  const download = root.querySelector('#download-pdf');
-  const downloadNote = root.querySelector('#download-note');
   const pages = new Map(result.pages.map(p => [p.page, p]));
   let level = options.getSensitivity();
   const enabled = f => options.isEnabled(f.type) && (f.levels || []).includes(level);
@@ -118,8 +116,136 @@ export function createReview({ root, result, documentId, user, options, fileName
   let pageRequest = 0;
   let disposed = false;
   let manualSeq = 0;
+  let savedUrl;
+  let downloadDialog;
+  let downloading = false;
+  let verifiedDownload;
   const cleanups = [];
   const on = (el, type, fn, opts) => { el.addEventListener(type, fn, opts); cleanups.push(() => el.removeEventListener(type, fn, opts)); };
+
+  function closeDownloadDialog() {
+    if (!downloadDialog) return;
+    if (downloadDialog.open) downloadDialog.close();
+    downloadDialog.remove();
+    downloadDialog = undefined;
+  }
+
+  function showDownloadDialog({ complete = false, retained = 0, redactionCount = 0 } = {}) {
+    closeDownloadDialog();
+    const dialog = document.createElement('dialog');
+    dialog.className = `verification-dialog download-dialog${complete ? ' download-dialog-complete' : ''}`;
+    dialog.setAttribute('aria-labelledby', 'download-dialog-title');
+    dialog.setAttribute('aria-describedby', 'download-dialog-message');
+
+    const shell = document.createElement('div');
+    shell.className = 'verification-dialog-shell';
+    const icon = document.createElement('span');
+    icon.className = 'verification-dialog-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = complete ? '↓' : '✓';
+
+    const heading = document.createElement('div');
+    heading.className = 'verification-dialog-heading';
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'verification-dialog-eyebrow';
+    eyebrow.textContent = complete ? 'Download started' : 'Verification complete';
+    const title = document.createElement('h2');
+    title.id = 'download-dialog-title';
+    title.textContent = complete ? 'Confirm your file, then continue' : 'Your PDF is ready';
+    heading.append(eyebrow, title);
+
+    const detail = document.createElement('p');
+    detail.className = 'verification-dialog-detail';
+    detail.textContent = complete ? outputName : 'Verified redacted PDF';
+
+    const message = document.createElement('p');
+    message.id = 'download-dialog-message';
+    message.className = 'verification-dialog-message';
+    message.textContent = complete
+      ? 'The PDF was sent to your browser. Confirm that it appears in your downloads before clearing this workspace.'
+      : retained
+        ? `The PDF passed verification with your choice to keep ${retained} sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} visible. ${redactionCount} selected ${redactionCount === 1 ? 'area was' : 'areas were'} permanently removed.`
+        : `The PDF passed verification. ${redactionCount} selected ${redactionCount === 1 ? 'area was' : 'areas were'} permanently removed.`;
+
+    const notice = document.createElement('div');
+    notice.className = 'download-dialog-notice';
+    const noticeTitle = document.createElement('strong');
+    noticeTitle.textContent = complete ? 'Server copy securely removed' : 'One-time server download';
+    const noticeText = document.createElement('span');
+    noticeText.textContent = complete
+      ? ' Confirm the PDF is saved on your device. If it is missing, choose “Save PDF again.” Choosing “Clear workspace & continue” also removes the recovery copy from this browser tab.'
+      : ' Downloading permanently deletes the temporary server copy. Save the PDF in a secure location.';
+    notice.append(noticeTitle, noticeText);
+
+    const errorNote = document.createElement('p');
+    errorNote.className = 'download-dialog-error';
+    errorNote.setAttribute('role', 'alert');
+    errorNote.hidden = true;
+
+    const actions = document.createElement('div');
+    actions.className = 'verification-dialog-actions';
+    let safeAction;
+    if (complete) {
+      const again = document.createElement('a');
+      again.className = 'secondary download-dialog-link';
+      again.href = savedUrl;
+      again.download = outputName;
+      again.textContent = 'Save PDF again';
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'primary';
+      clear.textContent = 'Clear workspace & continue';
+      clear.addEventListener('click', () => {
+        closeDownloadDialog();
+        onFinished?.();
+      });
+      actions.append(again, clear);
+      safeAction = again;
+    } else {
+      const review = document.createElement('button');
+      review.type = 'button';
+      review.className = 'secondary';
+      review.textContent = 'Return to review';
+      review.addEventListener('click', closeDownloadDialog);
+      const startDownload = document.createElement('button');
+      startDownload.type = 'button';
+      startDownload.className = 'primary';
+      startDownload.dataset.downloadAction = 'true';
+      startDownload.textContent = 'Download PDF';
+      startDownload.addEventListener('click', () => handleDownload());
+      actions.append(review, startDownload);
+      safeAction = review;
+    }
+
+    shell.append(icon, heading, detail, message, notice, errorNote, actions);
+    dialog.append(shell);
+    document.body.append(dialog);
+    downloadDialog = dialog;
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      closeDownloadDialog();
+    });
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) closeDownloadDialog();
+    });
+    dialog.showModal();
+    safeAction.focus();
+  }
+
+  function showDownloadDialogError(message) {
+    if (!downloadDialog) return;
+    const errorNote = downloadDialog.querySelector('.download-dialog-error');
+    const action = downloadDialog.querySelector('[data-download-action]');
+    if (errorNote) {
+      errorNote.hidden = false;
+      errorNote.textContent = message;
+    }
+    if (action) {
+      action.disabled = false;
+      action.textContent = 'Try download again';
+      action.focus();
+    }
+  }
 
   function box(rect, kind, id) {
     const p = pages.get(page);
@@ -179,11 +305,10 @@ export function createReview({ root, result, documentId, user, options, fileName
   }
   function invalidateDownload() {
     approved = false;
+    verifiedDownload = undefined;
+    closeDownloadDialog();
     approve.classList.remove('approved');
     if (!busy) approve.textContent = 'Approve & redact';
-    download.disabled = true;
-    download.closest('.download-panel').classList.remove('ready');
-    downloadNote.textContent = 'Selections changed. Approve and verify the updated redactions before downloading.';
   }
   function summary() {
     if (finished) { approve.disabled = true; toggle.disabled = true; return; }
@@ -193,7 +318,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     for (const input of list.querySelectorAll('input')) input.disabled = busy || finished;
     const allReviewed = reviewed.size >= pages.size;
     label.textContent = `Page ${page} of ${pages.size} · ${reviewed.size} of ${pages.size} reviewed`;
-    approve.disabled = busy || total === 0 || approved;
+    approve.disabled = busy || total === 0;
     slider.disabled = busy || finished;
     stops.forEach(stop => { stop.disabled = busy || finished; });
     note.classList.toggle('gate', !allReviewed && !finished);
@@ -308,6 +433,10 @@ export function createReview({ root, result, documentId, user, options, fileName
 
   on(approve, 'click', async () => {
     if (busy) return;
+    if (approved && verifiedDownload) {
+      showDownloadDialog(verifiedDownload);
+      return;
+    }
     const allReviewed = reviewed.size >= pages.size;
     const total = selected.size + manual.length;
     if (total === 0) return;
@@ -323,11 +452,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     approve.classList.add('working');
     setWorkflow(root, 3, { sub: 'Redacting & verifying…' });
     approve.disabled = true;
-    downloadNote.textContent = 'Working: removing the selected content and verifying the new PDF. This can take up to a minute; please keep this page open.';
-    download.closest('.download-panel').classList.add('working');
     toggle.disabled = true;
-    download.disabled = true;
-    download.closest('.download-panel').classList.remove('ready');
     banner.classList.remove('error');
     banner.textContent = 'Applying redactions and verifying the result…';
     note.removeAttribute('role');
@@ -356,19 +481,12 @@ export function createReview({ root, result, documentId, user, options, fileName
       if (!['VERIFIED', 'VERIFIED_WITH_RETAINED_DATA'].includes(outcome.status)) throw new Error('Verification did not finish. Download remains blocked.');
       const retained = outcome.retained_warning_count || 0;
       banner.textContent = retained
-        ? `Verified with your choice to keep ${retained} sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} visible. ${outcome.redaction_count} selected ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed. Download it below; it can be downloaded once.`
-        : `Verified. ${outcome.redaction_count} ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed and the new PDF passed verification. Download it below; it can be downloaded once.`;
-      downloadNote.textContent = retained
-        ? `Verified redacted PDF is ready with ${retained} acknowledged sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} left visible. The download is available once.`
-        : 'Verified redacted PDF is ready. The download is available once and then the temporary copy is deleted.';
+        ? `Verified with your choice to keep ${retained} sensitive ${retained === 1 ? 'occurrence' : 'occurrences'} visible. ${outcome.redaction_count} selected ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed. The PDF is ready for its one-time download.`
+        : `Verified. ${outcome.redaction_count} ${outcome.redaction_count === 1 ? 'area was' : 'areas were'} permanently removed and the new PDF passed verification. It is ready for its one-time download.`;
       approved = true;
-      download.disabled = false;
-      download.classList.replace('secondary', 'primary');
+      verifiedDownload = { retained, redactionCount: outcome.redaction_count };
       setWorkflow(root, 3, { sub: retained ? 'Verified with retained data' : 'Verified. Ready to download' });
-      const panel = download.closest('.download-panel');
-      panel.classList.add('ready');
-      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      download.focus({ preventScroll: true });
+      showDownloadDialog(verifiedDownload);
     } catch (error) {
       if (disposed) return;
       banner.classList.add('error');
@@ -379,11 +497,9 @@ export function createReview({ root, result, documentId, user, options, fileName
       busy = false;
       options.setLocked(finished);
       if (!disposed) {
-        approve.textContent = approved ? 'PDF ready to download below ↓' : 'Approve & redact';
+        approve.textContent = approved ? 'Open verified download' : 'Approve & redact';
         approve.classList.toggle('approved', approved);
         approve.classList.remove('working');
-        download.closest('.download-panel').classList.remove('working');
-        if (failure) downloadNote.textContent = 'The redacted file was not released. Review the message beside the Approve & redact button.';
         renderList();
         summary();
         if (failure) { note.textContent = `Redaction did not complete: ${failure}`; note.setAttribute('role', 'alert'); }
@@ -391,12 +507,14 @@ export function createReview({ root, result, documentId, user, options, fileName
       }
     }
   });
-  let savedUrl;
-  on(download, 'click', async () => {
-    if (finished) { onFinished?.(); return; }
-    if (download.disabled) return;
-    download.disabled = true;
-    downloadNote.textContent = 'Preparing your verified PDF…';
+  async function handleDownload() {
+    if (finished || downloading || !approved) return;
+    downloading = true;
+    const dialogAction = downloadDialog?.querySelector('[data-download-action]');
+    if (dialogAction) {
+      dialogAction.disabled = true;
+      dialogAction.textContent = 'Preparing download…';
+    }
     try {
       const blob = await downloadPdf(documentId, await user.getIdToken());
       // The server copy is deleted after this response, so keep the file in this browser tab until the user finishes.
@@ -408,26 +526,17 @@ export function createReview({ root, result, documentId, user, options, fileName
       link.click();
       link.remove();
       finished = true;
-      setWorkflow(root, 3, { complete: true, sub: 'Downloaded and cleared' });
+      setWorkflow(root, 3, { complete: true, sub: 'Downloaded. Ready to continue' });
       approve.disabled = true;
       toggle.disabled = true;
-      const panel = download.closest('.download-panel');
-      panel.classList.remove('ready');
-      downloadNote.replaceChildren(`Your redacted PDF was downloaded as ${outputName} and the temporary copy was deleted from our server. If the file did not save, `);
-      const again = document.createElement('a');
-      again.href = savedUrl;
-      again.download = outputName;
-      again.textContent = 'save it again from this page';
-      downloadNote.append(again, '. Finishing clears this copy from your browser.');
-      download.textContent = 'Finish and start a new document';
-      download.disabled = false;
-      download.focus({ preventScroll: true });
+      showDownloadDialog({ complete: true });
     } catch (error) {
-      download.disabled = false;
-      downloadNote.textContent = error instanceof TypeError ? 'The download could not reach the backend. Please try again.' : `The download could not be completed: ${error.message}`;
-      download.closest('.download-panel').classList.add('ready');
+      const message = error instanceof TypeError ? 'The download could not reach the backend. Please try again.' : `The download could not be completed: ${error.message}`;
+      showDownloadDialogError(message);
+    } finally {
+      downloading = false;
     }
-  });
+  }
 
   const counts = {};
   for (const f of result.findings) counts[f.type] = (counts[f.type] || 0) + 1;
@@ -494,6 +603,7 @@ export function createReview({ root, result, documentId, user, options, fileName
     options.setCounts({});
     controller?.abort();
     cleanups.forEach(fn => fn());
+    closeDownloadDialog();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     if (savedUrl) URL.revokeObjectURL(savedUrl);
     image.removeAttribute('src');
@@ -509,12 +619,9 @@ export function createReview({ root, result, documentId, user, options, fileName
     approve.disabled = true;
     approve.textContent = 'Approve & redact';
     approve.classList.remove('approved');
-    download.disabled = true;
-    download.closest('.download-panel').classList.remove('ready');
-    download.textContent = 'Download PDF';
     finished = false;
-    download.classList.replace('primary', 'secondary');
-    root.querySelector('#download-note').textContent = 'Download becomes available after approved redactions pass verification.';
+    downloading = false;
+    verifiedDownload = undefined;
     root.querySelector('#review-note').textContent = 'Scan a document to review suggestions. Nothing is redacted until you approve.';
     list.replaceChildren();
   };
