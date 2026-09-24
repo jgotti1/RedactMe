@@ -95,13 +95,13 @@ The block below is machine-readable project info for a portfolio site (invisible
 <!-- portfolio-card:start
 {
   "title": "RedactMe",
-  "category": "web app",
+  "category": "full stack web app",
   "tagline": "A private document workspace that finds sensitive details in PDFs and produces a verified, redacted copy.",
-  "description": "RedactMe lets a signed-in user upload a PDF, scans it for sensitive information, and presents each suggestion for human review. The user approves or adjusts redactions, including manual ones, and the app applies true redaction and verifies the output before a single-use download. Documents are processed temporarily in memory and no third-party AI service is used.",
+  "description": "RedactMe lets a signed-in user upload a PDF, scans it for sensitive information, and presents each suggestion for human review. The user approves or adjusts redactions, including manual ones, and the app applies true redaction and verifies the output before a single-use download. Documents are processed temporarily in memory and no third-party AI service is used. It is a full stack app (FastAPI backend serving a Vite-built frontend) deployed as a single Docker service on Railway.",
   "liveUrl": "https://redactme.margotticode.com",
   "repoUrl": "https://github.com/jgotti1/RedactMe",
   "thumbnail": "https://raw.githubusercontent.com/jgotti1/RedactMe/main/docs/preview.jpg",
-  "tech": ["Python", "FastAPI", "PyMuPDF", "Microsoft Presidio", "spaCy", "Tesseract OCR", "Firebase Authentication", "JavaScript", "Vite", "Docker", "Railway"],
+  "tech": ["Python", "FastAPI", "PyMuPDF", "Microsoft Presidio", "spaCy", "Tesseract OCR", "Firebase Authentication", "JavaScript", "Vite", "Docker", "Railway (deployment)"],
   "features": [
     "Google and email/password sign-in via Firebase",
     "Automatic detection of sensitive data with Presidio and deterministic rules",
