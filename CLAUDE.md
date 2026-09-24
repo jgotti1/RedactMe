@@ -5,3 +5,7 @@ Read and follow [AGENTS.md](AGENTS.md) before working on this project. It is the
 Update AGENTS.md when decisions or project status change. Keep this file as a reference only so switching between tools does not create duplicate or conflicting instructions.
 
 Also read the local [PLANNING.md](PLANNING.md) master specification and approved amendments as directed by AGENTS.md. It contains secrets and must remain private and excluded from Git.
+
+## Portfolio card
+
+README.md ends with a hidden JSON block (`portfolio-card:start` ... `portfolio-card:end`) used by the portfolio site. Keep it in sync when features, tech or URLs change, and keep it valid JSON with no `--` sequences.

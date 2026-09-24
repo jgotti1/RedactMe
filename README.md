@@ -87,3 +87,31 @@ References: [Firebase Google login](https://firebase.google.com/docs/auth/web/go
 Use the email form to sign in, or select Create an account to register with a confirmed password. New email accounts receive a Firebase verification email; the signed-in panel supports sending another email and refreshing verification status. Forgot password opens the reset form. Passwords are handled by Firebase and are never sent to our API or stored by the application. The workspace preview and backend greeting currently permit authenticated unverified email accounts; future document endpoints must define and enforce their verification policy on the backend.
 
 Real Firebase signup/login and email delivery require testing with your own account. Reference: [Firebase email/password authentication](https://firebase.google.com/docs/auth/web/password-auth) and [verification and password reset](https://firebase.google.com/docs/auth/web/manage-users).
+
+## Portfolio card
+
+The block below is machine-readable project info for a portfolio site (invisible on GitHub). Keep it in sync when the project, URL or tech changes. To build a card: read this JSON and use `title`, `tagline`/`description`, `thumbnail`, `tech`, and link to `liveUrl` and `repoUrl`.
+
+<!-- portfolio-card:start
+{
+  "title": "RedactMe",
+  "category": "web app",
+  "tagline": "A private document workspace that finds sensitive details in PDFs and produces a verified, redacted copy.",
+  "description": "RedactMe lets a signed-in user upload a PDF, scans it for sensitive information, and presents each suggestion for human review. The user approves or adjusts redactions, including manual ones, and the app applies true redaction and verifies the output before a single-use download. Documents are processed temporarily in memory and no third-party AI service is used.",
+  "liveUrl": "https://redactme.margotticode.com",
+  "repoUrl": "https://github.com/jgotti1/RedactMe",
+  "thumbnail": "https://raw.githubusercontent.com/jgotti1/RedactMe/main/docs/preview.jpg",
+  "tech": ["Python", "FastAPI", "PyMuPDF", "Microsoft Presidio", "spaCy", "Tesseract OCR", "Firebase Authentication", "JavaScript", "Vite", "Docker", "Railway"],
+  "features": [
+    "Google and email/password sign-in via Firebase",
+    "Automatic detection of sensitive data with Presidio and deterministic rules",
+    "Human review of every suggestion, plus manual redaction",
+    "Mandatory post-redaction verification before download",
+    "Single-use download with in-memory processing and cleanup",
+    "OCR support for scanned pages"
+  ],
+  "platforms": ["desktop", "tablet", "mobile"],
+  "status": "in-progress",
+  "origin": "Personal project, 2026"
+}
+portfolio-card:end -->
